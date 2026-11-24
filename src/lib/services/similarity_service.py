@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import json
 import logging
+import threading
 from pathlib import Path
 from typing import Callable, Optional
 from uuid import uuid4
@@ -9,6 +10,7 @@ from uuid import uuid4
 import cv2
 import numpy as np
 
+from lib.models.baseline import BaselineEmbedder
 from lib.schemas import EmbeddingRecord, Neighbor, SearchResult
 from lib.storage.base import EmbeddingStoreProtocol
 
@@ -72,7 +74,26 @@ class SimilarityService:
           - Recordar que la imagen llega en BGR (OpenCV).
         Retorna una lista de floats de dimension EMBEDDING_DIM.
         """
-        raise NotImplementedError("Etapa 1: implementar extract_embedding")
+        # ResNet50 IMAGENET1K_V1 sin fc (2048), preprocesamiento compartido y norma L2:
+        # ver lib/models/baseline.py. El modelo se carga una sola vez por servicio.
+        return self._get_baseline_embedder().embed(image)
+
+    _embedder_lock = threading.Lock()
+
+    def _get_baseline_embedder(self) -> BaselineEmbedder:
+        """Carga perezosa del baseline: el primer pedido lo crea, los siguientes lo reusan.
+
+        El lock evita cargarlo dos veces si llegan dos pedidos a la vez antes de
+        que termine la primera carga.
+        """
+        embedder = getattr(self, "_baseline_embedder", None)
+        if embedder is None:
+            with self._embedder_lock:
+                embedder = getattr(self, "_baseline_embedder", None)
+                if embedder is None:
+                    embedder = BaselineEmbedder(self.image_size)
+                    self._baseline_embedder = embedder
+        return embedder
 
     def search_similar_images(self, embedding: list[float], top_k: int) -> list[Neighbor]:
         """
