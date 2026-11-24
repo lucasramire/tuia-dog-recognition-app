@@ -1,8 +1,10 @@
 from __future__ import annotations
 
+import heapq
 import json
 import logging
 import threading
+from collections import defaultdict
 from pathlib import Path
 from typing import Callable, Optional
 from uuid import uuid4
@@ -106,7 +108,33 @@ class SimilarityService:
         Retorna una lista de Neighbor (path, breed, score) ordenada por score
         descendente.
         """
-        raise NotImplementedError("Etapa 1: implementar search_similar_images")
+        if not embedding:
+            raise ValueError("search_similar_images recibio un embedding vacio")
+        k = int(top_k)
+        if k <= 0:
+            return []
+
+        # Con pgvector la base resuelve el top-k (operador <=>, distancia coseno, class_4 6.12)
+        # sin traer todos los vectores a Python. Con l2 el orden de la base sigue siendo el del
+        # coseno: con embeddings de norma 1 ambos ordenan igual (||a-b||^2 = 2 - 2 cos).
+        # Sin pgvector (USE_PGVECTOR=false) se recorre toda la base JSON.
+        search = getattr(self.store, "search", None)
+        records = search(embedding, k) if callable(search) else self.store.all()
+
+        scored = []
+        for record in records:
+            if len(record.embedding) != len(embedding):
+                raise ValueError(
+                    f"El embedding de la consulta tiene {len(embedding)} dimensiones y el de "
+                    f"{record.path} tiene {len(record.embedding)}: la base se indexo con otro "
+                    "modelo. Reindexar o revisar EMBEDDING_MODEL / EMBEDDING_DIM."
+                )
+            scored.append((self.similarity(embedding, record.embedding), record))
+
+        # El score siempre sale de self.similarity (respeta SIMILARITY_METRIC) y se reordena
+        # aca, asi el resultado es el mismo con pgvector y con JSON.
+        best = heapq.nlargest(k, scored, key=lambda item: item[0])
+        return [Neighbor(path=r.path, breed=r.breed, score=float(s)) for s, r in best]
 
     def predict_breed_from_neighbors(self, results: list[Neighbor]) -> tuple[str, float]:
         """
@@ -116,7 +144,30 @@ class SimilarityService:
         Si el mejor score esta por debajo de self.similarity_threshold se
         considera "unknown". Retorna (raza, score).
         """
-        raise NotImplementedError("Etapa 1: implementar predict_breed_from_neighbors")
+        if not results:
+            return "unknown", 0.0
+
+        # Rechazo por similitud con el vecino mas cercano (criterio de identify_face, class_4).
+        best_score = max(n.score for n in results)
+        if best_score < self.similarity_threshold:
+            return "unknown", float(best_score)
+
+        # Voto ponderado por similitud (kNN de Dudani): un vecino mas parecido pesa mas.
+        # Las similitudes negativas no suman votos.
+        weights: dict[str, float] = defaultdict(float)
+        scores: dict[str, list[float]] = defaultdict(list)
+        for neighbor in results:
+            weights[neighbor.breed] += max(neighbor.score, 0.0)
+            scores[neighbor.breed].append(neighbor.score)
+
+        # Desempate: peso total, luego cantidad de votos, luego mejor vecino, luego nombre
+        # (para que el resultado no dependa del orden de entrada).
+        breed = min(
+            scores,
+            key=lambda b: (-weights[b], -len(scores[b]), -max(scores[b]), b),
+        )
+        # Score devuelto: similitud media de los vecinos de la raza ganadora.
+        return breed, float(np.mean(scores[breed]))
 
     # ------------------------------------------------------------------
     # Helpers de similitud provistos
