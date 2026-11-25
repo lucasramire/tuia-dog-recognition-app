@@ -42,6 +42,8 @@ class CustomCNN(EmbeddingClassifier):
         channels: Sequence[int] = DEFAULT_CHANNELS,
         dropout: float = 0.3,
         batchnorm: bool = True,
+        input_mean: Sequence[float] | None = None,
+        input_std: Sequence[float] | None = None,
     ) -> None:
         super().__init__(classes, embedding_dim)
         if not channels:
@@ -51,6 +53,15 @@ class CustomCNN(EmbeddingClassifier):
         self.channels = tuple(int(c) for c in channels)
         self.dropout_p = float(dropout)
         self.batchnorm = bool(batchnorm)
+        # Renormalizacion de entrada (experimento "estadisticas de train"): la imagen llega
+        # normalizada con ImageNet (pipeline unico) y aca se re-centra con la media y el
+        # desvio de train medidos en ese mismo espacio. Por defecto es la identidad.
+        mean = torch.zeros(3) if input_mean is None else torch.tensor(input_mean, dtype=torch.float32)
+        std = torch.ones(3) if input_std is None else torch.tensor(input_std, dtype=torch.float32)
+        if mean.shape != (3,) or std.shape != (3,) or bool((std <= 0).any()):
+            raise ValueError("input_mean e input_std deben tener 3 valores y el desvio ser positivo")
+        self.register_buffer("input_mean", mean.view(1, 3, 1, 1))
+        self.register_buffer("input_std", std.view(1, 3, 1, 1))
 
         blocks = []
         in_ch = 3
@@ -78,6 +89,7 @@ class CustomCNN(EmbeddingClassifier):
                 nn.init.zeros_(m.bias)
 
     def embed(self, x: torch.Tensor) -> torch.Tensor:
+        x = (x - self.input_mean) / self.input_std
         return self.embedding(self.pool(self.features(x)).flatten(1))
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:

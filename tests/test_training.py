@@ -130,3 +130,48 @@ def test_invalid_config_raises() -> None:
         _config(model="otro").validate()
     with pytest.raises(ValueError):
         _config(model="resnet18_finetuned", strategy="otra").validate()
+    with pytest.raises(ValueError):
+        _config(augmentation={"no_existe": 1}).validate()
+
+
+def test_cnn_input_stats_default_is_identity() -> None:
+    x = torch.randn(2, 3, SIZE, SIZE)
+    base = CustomCNN(CLASSES, embedding_dim=16, channels=(8, 16)).eval()
+    torch.manual_seed(0)
+    shifted = CustomCNN(CLASSES, embedding_dim=16, channels=(8, 16), input_mean=[1.0, 2.0, 3.0], input_std=[2.0, 2.0, 2.0]).eval()
+    shifted.load_state_dict(base.state_dict() | {"input_mean": shifted.input_mean, "input_std": shifted.input_std})
+    expected = base.embed((x - torch.tensor([1.0, 2.0, 3.0]).view(1, 3, 1, 1)) / 2.0)
+    assert torch.allclose(shifted.embed(x), expected, atol=1e-5)
+    with pytest.raises(ValueError):
+        CustomCNN(CLASSES, input_mean=[0.0, 0.0], input_std=[1.0, 1.0])
+
+
+def test_train_stats_and_custom_augmentation(tmp_path: Path) -> None:
+    manifest = _make_dataset(tmp_path / "data", {"train": 4, "valid": 2, "test": 2})
+    config = _config(epochs=1, cnn_train_stats=True, augmentation={"crop_border": 0.25, "hflip_p": 1.0})
+    result = train(config, manifest, tmp_path / "data", tmp_path / "m.pth", tmp_path / "h.json")
+    history = json.loads(result.history_path.read_text(encoding="utf-8"))
+    mean, std = history["input_stats"]
+    assert len(mean) == 3 and all(s > 0 for s in std)
+    model = load_checkpoint(result.checkpoint_path)
+    assert torch.allclose(model.input_mean.flatten(), torch.tensor(mean, dtype=torch.float32))
+    assert history["config"]["augmentation"] == {"crop_border": 0.25, "hflip_p": 1.0}
+
+
+def test_confused_pairs_mcnemar_bootstrap() -> None:
+    from lib.evaluation.classification import bootstrap_ci, mcnemar_test, top_confused_pairs
+
+    cm = np.array([[5, 3, 0], [1, 6, 0], [0, 2, 4]])
+    pairs = top_confused_pairs(cm, CLASSES, k=5)
+    assert pairs[0] == {"breed_a": "Afghan", "breed_b": "Beagle", "a_as_b": 3, "b_as_a": 1, "errors": 4}
+    assert [p["errors"] for p in pairs] == [4, 2]
+
+    a = np.array([1] * 10 + [0] * 0, dtype=bool)
+    b = np.array([0] * 10, dtype=bool)
+    result = mcnemar_test(a, b)
+    assert result["only_a"] == 10 and result["only_b"] == 0
+    assert result["p_value"] == pytest.approx(2 / 2**10)
+    assert mcnemar_test(a, a)["p_value"] == 1.0
+
+    mean, low, high = bootstrap_ci(np.array([1, 0] * 50))
+    assert mean == 0.5 and low < 0.5 < high

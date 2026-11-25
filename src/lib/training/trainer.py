@@ -23,7 +23,7 @@ import torch
 from torch import nn
 from torch.utils.data import DataLoader
 
-from lib.dataset.augmentation import make_transform
+from lib.dataset.augmentation import AugmentationConfig, make_transform
 from lib.dataset.manifest import class_names
 from lib.dataset.torch_dataset import ManifestDataset
 from lib.models.base import EmbeddingClassifier, save_checkpoint
@@ -52,12 +52,15 @@ class TrainConfig:
     num_workers: int = 0
     amp: bool = True
     augment: bool = True
+    # Cambios sobre AugmentationConfig (por ejemplo {"crop_border": 0.25}); None = valores por defecto
+    augmentation: dict | None = None
     class_weights: bool = False  # D-25: pesos inversos a la frecuencia
     image_size: int = 224
     cnn_embedding_dim: int = 256
     cnn_dropout: float = 0.3
     cnn_batchnorm: bool = True
     cnn_channels: tuple[int, ...] = (32, 64, 128, 256, 256)
+    cnn_train_stats: bool = False  # Modelo B: renormaliza la entrada con media y desvio de train
     pretrained: bool = True  # Modelo A; False solo para tests sin descargar pesos
     max_per_class_train: int | None = None  # pruebas de humo
     max_per_class_valid: int | None = None
@@ -73,6 +76,13 @@ class TrainConfig:
             raise ValueError(f"Estrategia desconocida '{self.strategy}'; validas: {list(STRATEGIES)}")
         if self.resolved_epochs() <= 0 or self.batch_size <= 0 or self.patience <= 0:
             raise ValueError("epochs, batch_size y patience deben ser positivos")
+        self.augmentation_config()  # falla aca si hay claves de augmentation desconocidas
+
+    def augmentation_config(self) -> AugmentationConfig:
+        try:
+            return AugmentationConfig(**(self.augmentation or {}))
+        except TypeError as exc:
+            raise ValueError(f"augmentation invalida: {exc}") from exc
 
 
 @dataclass
@@ -96,14 +106,35 @@ def resolve_device(device: str | None) -> torch.device:
     return torch.device(device) if device else torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 
-def build_model(config: TrainConfig, classes: list[str]) -> EmbeddingClassifier:
+def channel_stats(dataset: ManifestDataset, batch_size: int = 256) -> tuple[list[float], list[float]]:
+    """Media y desvio por canal de un split ya preprocesado (sin augmentation)."""
+    loader = DataLoader(dataset, batch_size=batch_size, shuffle=False)
+    total = torch.zeros(3, dtype=torch.float64)
+    total_sq = torch.zeros(3, dtype=torch.float64)
+    count = 0
+    for images, _ in loader:
+        images = images.double()
+        total += images.sum(dim=(0, 2, 3))
+        total_sq += (images**2).sum(dim=(0, 2, 3))
+        count += images.shape[0] * images.shape[2] * images.shape[3]
+    mean = total / count
+    std = (total_sq / count - mean**2).clamp_min(1e-12).sqrt()
+    return mean.tolist(), std.tolist()
+
+
+def build_model(
+    config: TrainConfig, classes: list[str], input_stats: tuple[list[float], list[float]] | None = None
+) -> EmbeddingClassifier:
     if config.model == "cnn_custom":
+        mean, std = input_stats if input_stats is not None else (None, None)
         return CustomCNN(
             classes,
             embedding_dim=config.cnn_embedding_dim,
             channels=config.cnn_channels,
             dropout=config.cnn_dropout,
             batchnorm=config.cnn_batchnorm,
+            input_mean=mean,
+            input_std=std,
         )
     model = ResNetClassifier(classes, pretrained=config.pretrained)
     if config.strategy == "feature_extraction":
@@ -204,7 +235,9 @@ def train(
 
     train_ds = ManifestDataset(
         manifest, "train", dataset_path, classes,
-        make_transform(train=config.augment, image_size=config.image_size, seed=config.seed),
+        make_transform(
+            train=config.augment, image_size=config.image_size, config=config.augmentation_config(), seed=config.seed
+        ),
         max_per_class=config.max_per_class_train, seed=config.seed,
     )
     valid_ds = ManifestDataset(
@@ -215,7 +248,15 @@ def train(
     train_loader = make_loader(train_ds, config, shuffle=True, device=device)
     valid_loader = make_loader(valid_ds, config, shuffle=False, device=device)
 
-    model = build_model(config, classes).to(device)
+    input_stats = None
+    if config.model == "cnn_custom" and config.cnn_train_stats:
+        stats_ds = ManifestDataset(
+            manifest, "train", dataset_path, classes, make_transform(train=False, image_size=config.image_size),
+            max_per_class=config.max_per_class_train, seed=config.seed,
+        )
+        input_stats = channel_stats(stats_ds)
+        logger.info("Estadisticas de train (espacio ImageNet): media %s desvio %s", *input_stats)
+    model = build_model(config, classes, input_stats).to(device)
     optimizer = build_optimizer(model, config)
     scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=epochs)
     weight = None
@@ -241,6 +282,7 @@ def train(
         "device": str(device),
         "train_size": len(train_ds),
         "valid_size": len(valid_ds),
+        "input_stats": input_stats,
         "parameters": n_params,
         "trainable_parameters": n_trainable,
         "history": [],
