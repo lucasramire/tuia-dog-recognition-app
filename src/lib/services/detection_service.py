@@ -2,16 +2,29 @@ from __future__ import annotations
 
 import json
 import logging
+import threading
 from pathlib import Path
+from typing import Any
 from uuid import uuid4
 
 import cv2
 import numpy as np
+import torch
 
+from lib.models.export import ONNX_CLASSES_KEY
 from lib.schemas import ClassifyResult, DetectResult, DogDetection
 from lib.services.classifier_service import ClassifierService
+from lib.vision.preprocessing import preprocess_batch
 
 logger = logging.getLogger(__name__)
+
+UNKNOWN_BREED = "unknown"
+
+
+def _softmax(logits: np.ndarray) -> np.ndarray:
+    shifted = logits - logits.max(axis=-1, keepdims=True)
+    exp = np.exp(shifted)
+    return exp / exp.sum(axis=-1, keepdims=True)
 
 
 class DetectionService:
@@ -31,11 +44,34 @@ class DetectionService:
         yolo_model: str,
         conf_threshold: float,
         dog_class_id: int,
+        iou_threshold: float | None = None,
+        min_confidence: float | None = None,
     ) -> None:
         self.classifier = classifier
         self.yolo_model_name = yolo_model
         self.conf_threshold = conf_threshold
         self.dog_class_id = dog_class_id
+        # Parametros agregados (justificados en el PR): si no se pasan, salen del .env.
+        if iou_threshold is None or min_confidence is None:
+            from lib.config import settings
+
+            iou_threshold = settings.yolo_iou_threshold if iou_threshold is None else iou_threshold
+            min_confidence = settings.classifier_min_confidence if min_confidence is None else min_confidence
+        self.iou_threshold = float(iou_threshold)
+        self.min_confidence = float(min_confidence)
+        self._yolo: Any = None
+        self._yolo_lock = threading.Lock()
+
+    def _get_yolo(self) -> Any:
+        """Carga el modelo YOLO una sola vez (no en cada request)."""
+        if self._yolo is None:
+            with self._yolo_lock:
+                if self._yolo is None:
+                    from ultralytics import YOLO
+
+                    logger.info("Cargando YOLO desde %s", self.yolo_model_name)
+                    self._yolo = YOLO(self.yolo_model_name)
+        return self._yolo
 
     @staticmethod
     def _clip_xyxy(
@@ -75,7 +111,35 @@ class DetectionService:
 
         Retorna una lista de ((x1, y1, x2, y2), confidence) en pixeles.
         """
-        raise NotImplementedError("Etapa 3: implementar detect_dogs")
+        if not isinstance(image, np.ndarray) or image.ndim != 3 or image.shape[2] != 3 or image.size == 0:
+            raise ValueError(f"detect_dogs espera una imagen BGR (alto, ancho, 3); llego {getattr(image, 'shape', type(image))}")
+        height, width = image.shape[:2]
+
+        # ultralytics interpreta los np.ndarray como BGR, igual que OpenCV.
+        results = self._get_yolo().predict(
+            image,
+            conf=self.conf_threshold,
+            iou=self.iou_threshold,
+            classes=[self.dog_class_id],
+            verbose=False,
+        )
+        detections: list[tuple[tuple[int, int, int, int], float]] = []
+        for result in results:
+            boxes = result.boxes
+            if boxes is None or len(boxes) == 0:
+                continue
+            xyxy = boxes.xyxy.cpu().numpy()
+            confs = boxes.conf.cpu().numpy()
+            cls = boxes.cls.cpu().numpy().astype(int)
+            for (x1, y1, x2, y2), conf, c in zip(xyxy, confs, cls):
+                if c != self.dog_class_id:
+                    continue
+                box = self._clip_xyxy(
+                    int(round(x1)), int(round(y1)), int(round(x2)), int(round(y2)), height, width
+                )
+                detections.append((box, float(conf)))
+        detections.sort(key=lambda item: item[1], reverse=True)
+        return detections
 
     def classify_detected_dog(self, crop: np.ndarray) -> tuple[str, float]:
         """
@@ -84,7 +148,44 @@ class DetectionService:
 
         El recorte llega en BGR (OpenCV). Retorna (raza, score).
         """
-        raise NotImplementedError("Etapa 3: implementar classify_detected_dog")
+        probs, classes = self._predict_probabilities(crop)
+        best = int(np.argmax(probs))
+        score = float(probs[best])
+        if score < self.min_confidence:
+            return UNKNOWN_BREED, score
+        return classes[best], score
+
+    def _predict_probabilities(self, crop: np.ndarray) -> tuple[np.ndarray, list[str]]:
+        """Probabilidades softmax del modelo activo (.pth o .onnx) y la lista de razas."""
+        # Mismo preprocesamiento que en el entrenamiento (valida la entrada).
+        batch = preprocess_batch([crop], self.classifier.image_size)
+        model = self.classifier.load_model()
+
+        if isinstance(model, torch.nn.Module):
+            classes = getattr(model, "classes", None)
+            if not classes:
+                raise ValueError("El checkpoint no tiene el atributo 'classes' (lista de razas)")
+            device = next(model.parameters()).device
+            model.eval()
+            with torch.inference_mode():
+                logits = model(torch.from_numpy(batch).to(device))
+            probs = torch.softmax(logits.float(), dim=1)[0].cpu().numpy()
+            return probs, list(classes)
+
+        # onnxruntime.InferenceSession
+        meta = model.get_modelmeta().custom_metadata_map
+        if ONNX_CLASSES_KEY not in meta:
+            raise ValueError(
+                f"El modelo ONNX no tiene la lista de razas en sus metadatos ('{ONNX_CLASSES_KEY}'). "
+                "Exportalo con lib.models.export."
+            )
+        classes = json.loads(meta[ONNX_CLASSES_KEY])
+        input_name = model.get_inputs()[0].name
+        logits = model.run(None, {input_name: batch})[0]
+        probs = _softmax(np.asarray(logits, dtype=np.float32))[0]
+        if probs.shape[0] != len(classes):
+            raise ValueError(f"El ONNX devuelve {probs.shape[0]} clases y sus metadatos listan {len(classes)}")
+        return probs, list(classes)
 
     # ------------------------------------------------------------------
     # Orquestacion provista
