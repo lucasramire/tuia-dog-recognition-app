@@ -1,0 +1,749 @@
+path,breed,split,drop_reason
+train/African Wild Dog/101.jpg,African Wild Dog,train,borrosa
+train/Chinese Crested/092.jpg,Chinese Crested,train,borrosa
+train/Maltese/040.jpg,Maltese,train,borrosa
+train/Maltese/120.jpg,Maltese,train,borrosa
+train/Poodle/016.jpg,Poodle,train,borrosa
+test/Cockapoo/05.jpg,Cockapoo,test,duplicado dentro del split
+test/Coyote/09.jpg,Coyote,test,duplicado dentro del split
+test/Groenendael/10.jpg,Groenendael,test,duplicado dentro del split
+test/Irish Spaniel/10.jpg,Irish Spaniel,test,duplicado dentro del split
+test/Newfoundland/09.jpg,Newfoundland,test,duplicado dentro del split
+test/Newfoundland/10.jpg,Newfoundland,test,duplicado dentro del split
+train/Afghan/043.jpg,Afghan,train,duplicado dentro del split
+train/Afghan/050.jpg,Afghan,train,duplicado dentro del split
+train/Afghan/092.jpg,Afghan,train,duplicado dentro del split
+train/African Wild Dog/011.jpg,African Wild Dog,train,duplicado dentro del split
+train/African Wild Dog/068.jpg,African Wild Dog,train,duplicado dentro del split
+train/African Wild Dog/104.jpg,African Wild Dog,train,duplicado dentro del split
+train/Airedale/004.jpg,Airedale,train,duplicado dentro del split
+train/Airedale/013.jpg,Airedale,train,duplicado dentro del split
+train/Airedale/021.jpg,Airedale,train,duplicado dentro del split
+train/Airedale/029.jpg,Airedale,train,duplicado dentro del split
+train/Airedale/032.jpg,Airedale,train,duplicado dentro del split
+train/Airedale/109.jpg,Airedale,train,duplicado dentro del split
+train/American Hairless/45.jpg,American Hairless,train,duplicado dentro del split
+train/American Hairless/54.jpg,American Hairless,train,duplicado dentro del split
+train/American Hairless/65.jpg,American Hairless,train,duplicado dentro del split
+train/American Spaniel/48.jpg,American Spaniel,train,duplicado dentro del split
+train/American Spaniel/79.jpg,American Spaniel,train,duplicado dentro del split
+train/Basenji/47.jpg,Basenji,train,duplicado dentro del split
+train/Basenji/67.jpg,Basenji,train,duplicado dentro del split
+train/Basenji/76.jpg,Basenji,train,duplicado dentro del split
+train/Basenji/82.jpg,Basenji,train,duplicado dentro del split
+train/Basenji/83.jpg,Basenji,train,duplicado dentro del split
+train/Basenji/85.jpg,Basenji,train,duplicado dentro del split
+train/Basenji/86.jpg,Basenji,train,duplicado dentro del split
+train/Basenji/88.jpg,Basenji,train,duplicado dentro del split
+train/Basenji/97.jpg,Basenji,train,duplicado dentro del split
+train/Basenji/98.jpg,Basenji,train,duplicado dentro del split
+train/Basset/018.jpg,Basset,train,duplicado dentro del split
+train/Basset/035.jpg,Basset,train,duplicado dentro del split
+train/Basset/040.jpg,Basset,train,duplicado dentro del split
+train/Basset/089.jpg,Basset,train,duplicado dentro del split
+train/Basset/127.jpg,Basset,train,duplicado dentro del split
+train/Basset/131.jpg,Basset,train,duplicado dentro del split
+train/Basset/133.jpg,Basset,train,duplicado dentro del split
+train/Basset/135.jpg,Basset,train,duplicado dentro del split
+train/Basset/136.jpg,Basset,train,duplicado dentro del split
+train/Basset/139.jpg,Basset,train,duplicado dentro del split
+train/Basset/142.jpg,Basset,train,duplicado dentro del split
+train/Basset/146.jpg,Basset,train,duplicado dentro del split
+train/Basset/151.jpg,Basset,train,duplicado dentro del split
+train/Basset/152.jpg,Basset,train,duplicado dentro del split
+train/Basset/154.jpg,Basset,train,duplicado dentro del split
+train/Basset/155.jpg,Basset,train,duplicado dentro del split
+train/Basset/156.jpg,Basset,train,duplicado dentro del split
+train/Basset/158.jpg,Basset,train,duplicado dentro del split
+train/Beagle/016.jpg,Beagle,train,duplicado dentro del split
+train/Beagle/019.jpg,Beagle,train,duplicado dentro del split
+train/Beagle/033.jpg,Beagle,train,duplicado dentro del split
+train/Beagle/038.jpg,Beagle,train,duplicado dentro del split
+train/Beagle/044.jpg,Beagle,train,duplicado dentro del split
+train/Bearded Collie/13.jpg,Bearded Collie,train,duplicado dentro del split
+train/Bearded Collie/51.jpg,Bearded Collie,train,duplicado dentro del split
+train/Bearded Collie/59.jpg,Bearded Collie,train,duplicado dentro del split
+train/Bearded Collie/63.jpg,Bearded Collie,train,duplicado dentro del split
+train/Bearded Collie/65.jpg,Bearded Collie,train,duplicado dentro del split
+train/Bearded Collie/67.jpg,Bearded Collie,train,duplicado dentro del split
+train/Bearded Collie/72.jpg,Bearded Collie,train,duplicado dentro del split
+train/Bermaise/052.jpg,Bermaise,train,duplicado dentro del split
+train/Bermaise/095.jpg,Bermaise,train,duplicado dentro del split
+train/Bermaise/102.jpg,Bermaise,train,duplicado dentro del split
+train/Bichon Frise/058.jpg,Bichon Frise,train,duplicado dentro del split
+train/Bichon Frise/065.jpg,Bichon Frise,train,duplicado dentro del split
+train/Bichon Frise/072.jpg,Bichon Frise,train,duplicado dentro del split
+train/Bichon Frise/073.jpg,Bichon Frise,train,duplicado dentro del split
+train/Bichon Frise/081.jpg,Bichon Frise,train,duplicado dentro del split
+train/Bichon Frise/083.jpg,Bichon Frise,train,duplicado dentro del split
+train/Bichon Frise/084.jpg,Bichon Frise,train,duplicado dentro del split
+train/Bichon Frise/085.jpg,Bichon Frise,train,duplicado dentro del split
+train/Bichon Frise/088.jpg,Bichon Frise,train,duplicado dentro del split
+train/Bichon Frise/090.jpg,Bichon Frise,train,duplicado dentro del split
+train/Bichon Frise/093.jpg,Bichon Frise,train,duplicado dentro del split
+train/Bichon Frise/098.jpg,Bichon Frise,train,duplicado dentro del split
+train/Bichon Frise/102.jpg,Bichon Frise,train,duplicado dentro del split
+train/Bichon Frise/105.jpg,Bichon Frise,train,duplicado dentro del split
+train/Bloodhound/042.jpg,Bloodhound,train,duplicado dentro del split
+train/Bloodhound/066.jpg,Bloodhound,train,duplicado dentro del split
+train/Bloodhound/074.jpg,Bloodhound,train,duplicado dentro del split
+train/Bloodhound/083.jpg,Bloodhound,train,duplicado dentro del split
+train/Bloodhound/087.jpg,Bloodhound,train,duplicado dentro del split
+train/Bloodhound/089.jpg,Bloodhound,train,duplicado dentro del split
+train/Bloodhound/094.jpg,Bloodhound,train,duplicado dentro del split
+train/Bloodhound/098.jpg,Bloodhound,train,duplicado dentro del split
+train/Bloodhound/099.jpg,Bloodhound,train,duplicado dentro del split
+train/Bloodhound/103.jpg,Bloodhound,train,duplicado dentro del split
+train/Bloodhound/105.jpg,Bloodhound,train,duplicado dentro del split
+train/Bloodhound/111.jpg,Bloodhound,train,duplicado dentro del split
+train/Bloodhound/121.jpg,Bloodhound,train,duplicado dentro del split
+train/Bloodhound/127.jpg,Bloodhound,train,duplicado dentro del split
+train/Bloodhound/130.jpg,Bloodhound,train,duplicado dentro del split
+train/Bloodhound/141.jpg,Bloodhound,train,duplicado dentro del split
+train/Bloodhound/143.jpg,Bloodhound,train,duplicado dentro del split
+train/Bluetick/038.jpg,Bluetick,train,duplicado dentro del split
+train/Bluetick/101.jpg,Bluetick,train,duplicado dentro del split
+train/Bluetick/102.jpg,Bluetick,train,duplicado dentro del split
+train/Bluetick/106.jpg,Bluetick,train,duplicado dentro del split
+train/Borzoi/021.jpg,Borzoi,train,duplicado dentro del split
+train/Borzoi/029.jpg,Borzoi,train,duplicado dentro del split
+train/Borzoi/048.jpg,Borzoi,train,duplicado dentro del split
+train/Borzoi/075.jpg,Borzoi,train,duplicado dentro del split
+train/Borzoi/079.jpg,Borzoi,train,duplicado dentro del split
+train/Borzoi/096.jpg,Borzoi,train,duplicado dentro del split
+train/Borzoi/102.jpg,Borzoi,train,duplicado dentro del split
+train/Borzoi/104.jpg,Borzoi,train,duplicado dentro del split
+train/Borzoi/109.jpg,Borzoi,train,duplicado dentro del split
+train/Boston Terrier/67.jpg,Boston Terrier,train,duplicado dentro del split
+train/Boxer/024.jpg,Boxer,train,duplicado dentro del split
+train/Boxer/027.jpg,Boxer,train,duplicado dentro del split
+train/Boxer/034.jpg,Boxer,train,duplicado dentro del split
+train/Boxer/037.jpg,Boxer,train,duplicado dentro del split
+train/Boxer/071.jpg,Boxer,train,duplicado dentro del split
+train/Boxer/083.jpg,Boxer,train,duplicado dentro del split
+train/Boxer/095.jpg,Boxer,train,duplicado dentro del split
+train/Boxer/097.jpg,Boxer,train,duplicado dentro del split
+train/Boxer/102.jpg,Boxer,train,duplicado dentro del split
+train/Boxer/104.jpg,Boxer,train,duplicado dentro del split
+train/Boxer/107.jpg,Boxer,train,duplicado dentro del split
+train/Boxer/108.jpg,Boxer,train,duplicado dentro del split
+train/Boxer/111.jpg,Boxer,train,duplicado dentro del split
+train/Boxer/115.jpg,Boxer,train,duplicado dentro del split
+train/Boxer/118.jpg,Boxer,train,duplicado dentro del split
+train/Boxer/121.jpg,Boxer,train,duplicado dentro del split
+train/Boxer/122.jpg,Boxer,train,duplicado dentro del split
+train/Boxer/123.jpg,Boxer,train,duplicado dentro del split
+train/Boxer/124.jpg,Boxer,train,duplicado dentro del split
+train/Boxer/130.jpg,Boxer,train,duplicado dentro del split
+train/Boxer/132.jpg,Boxer,train,duplicado dentro del split
+train/Bull Mastiff/010.jpg,Bull Mastiff,train,duplicado dentro del split
+train/Bull Mastiff/025.jpg,Bull Mastiff,train,duplicado dentro del split
+train/Bull Mastiff/036.jpg,Bull Mastiff,train,duplicado dentro del split
+train/Bull Mastiff/037.jpg,Bull Mastiff,train,duplicado dentro del split
+train/Bull Mastiff/042.jpg,Bull Mastiff,train,duplicado dentro del split
+train/Bull Mastiff/044.jpg,Bull Mastiff,train,duplicado dentro del split
+train/Bull Mastiff/046.jpg,Bull Mastiff,train,duplicado dentro del split
+train/Bull Mastiff/047.jpg,Bull Mastiff,train,duplicado dentro del split
+train/Bull Terrier/015.jpg,Bull Terrier,train,duplicado dentro del split
+train/Bull Terrier/016.jpg,Bull Terrier,train,duplicado dentro del split
+train/Bull Terrier/027.jpg,Bull Terrier,train,duplicado dentro del split
+train/Bull Terrier/034.jpg,Bull Terrier,train,duplicado dentro del split
+train/Bull Terrier/035.jpg,Bull Terrier,train,duplicado dentro del split
+train/Bull Terrier/061.jpg,Bull Terrier,train,duplicado dentro del split
+train/Bull Terrier/077.jpg,Bull Terrier,train,duplicado dentro del split
+train/Bull Terrier/078.jpg,Bull Terrier,train,duplicado dentro del split
+train/Bull Terrier/080.jpg,Bull Terrier,train,duplicado dentro del split
+train/Bull Terrier/083.jpg,Bull Terrier,train,duplicado dentro del split
+train/Bull Terrier/084.jpg,Bull Terrier,train,duplicado dentro del split
+train/Bull Terrier/085.jpg,Bull Terrier,train,duplicado dentro del split
+train/Bull Terrier/088.jpg,Bull Terrier,train,duplicado dentro del split
+train/Bull Terrier/089.jpg,Bull Terrier,train,duplicado dentro del split
+train/Bull Terrier/098.jpg,Bull Terrier,train,duplicado dentro del split
+train/Bulldog/033.jpg,Bulldog,train,duplicado dentro del split
+train/Bulldog/042.jpg,Bulldog,train,duplicado dentro del split
+train/Cairn/091.jpg,Cairn,train,duplicado dentro del split
+train/Cairn/093.jpg,Cairn,train,duplicado dentro del split
+train/Cairn/095.jpg,Cairn,train,duplicado dentro del split
+train/Cairn/102.jpg,Cairn,train,duplicado dentro del split
+train/Cairn/105.jpg,Cairn,train,duplicado dentro del split
+train/Chihuahua/074.jpg,Chihuahua,train,duplicado dentro del split
+train/Chihuahua/079.jpg,Chihuahua,train,duplicado dentro del split
+train/Chihuahua/080.jpg,Chihuahua,train,duplicado dentro del split
+train/Chihuahua/081.jpg,Chihuahua,train,duplicado dentro del split
+train/Chihuahua/087.jpg,Chihuahua,train,duplicado dentro del split
+train/Chihuahua/090.jpg,Chihuahua,train,duplicado dentro del split
+train/Chihuahua/094.jpg,Chihuahua,train,duplicado dentro del split
+train/Chihuahua/101.jpg,Chihuahua,train,duplicado dentro del split
+train/Chihuahua/105.jpg,Chihuahua,train,duplicado dentro del split
+train/Chinese Crested/046.jpg,Chinese Crested,train,duplicado dentro del split
+train/Chinese Crested/069.jpg,Chinese Crested,train,duplicado dentro del split
+train/Chow/080.jpg,Chow,train,duplicado dentro del split
+train/Chow/106.jpg,Chow,train,duplicado dentro del split
+train/Chow/109.jpg,Chow,train,duplicado dentro del split
+train/Chow/110.jpg,Chow,train,duplicado dentro del split
+train/Clumber/018.jpg,Clumber,train,duplicado dentro del split
+train/Clumber/019.jpg,Clumber,train,duplicado dentro del split
+train/Clumber/020.jpg,Clumber,train,duplicado dentro del split
+train/Clumber/024.jpg,Clumber,train,duplicado dentro del split
+train/Clumber/026.jpg,Clumber,train,duplicado dentro del split
+train/Clumber/033.jpg,Clumber,train,duplicado dentro del split
+train/Clumber/036.jpg,Clumber,train,duplicado dentro del split
+train/Clumber/039.jpg,Clumber,train,duplicado dentro del split
+train/Clumber/043.jpg,Clumber,train,duplicado dentro del split
+train/Clumber/047.jpg,Clumber,train,duplicado dentro del split
+train/Cockapoo/019.jpg,Cockapoo,train,duplicado dentro del split
+train/Cockapoo/038.jpg,Cockapoo,train,duplicado dentro del split
+train/Cockapoo/040.jpg,Cockapoo,train,duplicado dentro del split
+train/Cockapoo/044.jpg,Cockapoo,train,duplicado dentro del split
+train/Cockapoo/062.jpg,Cockapoo,train,duplicado dentro del split
+train/Cockapoo/068.jpg,Cockapoo,train,duplicado dentro del split
+train/Cockapoo/069.jpg,Cockapoo,train,duplicado dentro del split
+train/Cockapoo/073.jpg,Cockapoo,train,duplicado dentro del split
+train/Cockapoo/076.jpg,Cockapoo,train,duplicado dentro del split
+train/Cockapoo/079.jpg,Cockapoo,train,duplicado dentro del split
+train/Cockapoo/081.jpg,Cockapoo,train,duplicado dentro del split
+train/Cockapoo/096.jpg,Cockapoo,train,duplicado dentro del split
+train/Cockapoo/099.jpg,Cockapoo,train,duplicado dentro del split
+train/Cockapoo/104.jpg,Cockapoo,train,duplicado dentro del split
+train/Cockapoo/105.jpg,Cockapoo,train,duplicado dentro del split
+train/Cockapoo/106.jpg,Cockapoo,train,duplicado dentro del split
+train/Cockapoo/108.jpg,Cockapoo,train,duplicado dentro del split
+train/Cockapoo/109.jpg,Cockapoo,train,duplicado dentro del split
+train/Cockapoo/113.jpg,Cockapoo,train,duplicado dentro del split
+train/Cockapoo/118.jpg,Cockapoo,train,duplicado dentro del split
+train/Cockapoo/122.jpg,Cockapoo,train,duplicado dentro del split
+train/Cockapoo/126.jpg,Cockapoo,train,duplicado dentro del split
+train/Cockapoo/127.jpg,Cockapoo,train,duplicado dentro del split
+train/Cockapoo/128.jpg,Cockapoo,train,duplicado dentro del split
+train/Cocker/027.jpg,Cocker,train,duplicado dentro del split
+train/Cocker/030.jpg,Cocker,train,duplicado dentro del split
+train/Cocker/031.jpg,Cocker,train,duplicado dentro del split
+train/Cocker/037.jpg,Cocker,train,duplicado dentro del split
+train/Cocker/047.jpg,Cocker,train,duplicado dentro del split
+train/Cocker/053.jpg,Cocker,train,duplicado dentro del split
+train/Collie/087.jpg,Collie,train,duplicado dentro del split
+train/Collie/102.jpg,Collie,train,duplicado dentro del split
+train/Collie/105.jpg,Collie,train,duplicado dentro del split
+train/Collie/114.jpg,Collie,train,duplicado dentro del split
+train/Corgi/009.jpg,Corgi,train,duplicado dentro del split
+train/Corgi/048.jpg,Corgi,train,duplicado dentro del split
+train/Corgi/060.jpg,Corgi,train,duplicado dentro del split
+train/Corgi/062.jpg,Corgi,train,duplicado dentro del split
+train/Corgi/063.jpg,Corgi,train,duplicado dentro del split
+train/Corgi/068.jpg,Corgi,train,duplicado dentro del split
+train/Corgi/070.jpg,Corgi,train,duplicado dentro del split
+train/Corgi/077.jpg,Corgi,train,duplicado dentro del split
+train/Corgi/079.jpg,Corgi,train,duplicado dentro del split
+train/Corgi/080.jpg,Corgi,train,duplicado dentro del split
+train/Corgi/090.jpg,Corgi,train,duplicado dentro del split
+train/Corgi/091.jpg,Corgi,train,duplicado dentro del split
+train/Corgi/106.jpg,Corgi,train,duplicado dentro del split
+train/Dalmation/10.jpg,Dalmation,train,duplicado dentro del split
+train/Dalmation/20.jpg,Dalmation,train,duplicado dentro del split
+train/Dalmation/23.jpg,Dalmation,train,duplicado dentro del split
+train/Dalmation/30.jpg,Dalmation,train,duplicado dentro del split
+train/Dalmation/44.jpg,Dalmation,train,duplicado dentro del split
+train/Dalmation/54.jpg,Dalmation,train,duplicado dentro del split
+train/Dhole/038.jpg,Dhole,train,duplicado dentro del split
+train/Dhole/069.jpg,Dhole,train,duplicado dentro del split
+train/Dhole/076.jpg,Dhole,train,duplicado dentro del split
+train/Dhole/080.jpg,Dhole,train,duplicado dentro del split
+train/Dhole/091.jpg,Dhole,train,duplicado dentro del split
+train/Dhole/101.jpg,Dhole,train,duplicado dentro del split
+train/Dhole/102.jpg,Dhole,train,duplicado dentro del split
+train/Dhole/103.jpg,Dhole,train,duplicado dentro del split
+train/Dhole/104.jpg,Dhole,train,duplicado dentro del split
+train/Dhole/106.jpg,Dhole,train,duplicado dentro del split
+train/Dhole/107.jpg,Dhole,train,duplicado dentro del split
+train/Dhole/110.jpg,Dhole,train,duplicado dentro del split
+train/Dhole/111.jpg,Dhole,train,duplicado dentro del split
+train/Dhole/119.jpg,Dhole,train,duplicado dentro del split
+train/Dingo/028.jpg,Dingo,train,duplicado dentro del split
+train/Dingo/033.jpg,Dingo,train,duplicado dentro del split
+train/Dingo/036.jpg,Dingo,train,duplicado dentro del split
+train/Dingo/038.jpg,Dingo,train,duplicado dentro del split
+train/Dingo/049.jpg,Dingo,train,duplicado dentro del split
+train/Dingo/101.jpg,Dingo,train,duplicado dentro del split
+train/Doberman/033.jpg,Doberman,train,duplicado dentro del split
+train/Doberman/041.jpg,Doberman,train,duplicado dentro del split
+train/Doberman/043.jpg,Doberman,train,duplicado dentro del split
+train/Doberman/046.jpg,Doberman,train,duplicado dentro del split
+train/Doberman/073.jpg,Doberman,train,duplicado dentro del split
+train/Elk Hound/043.jpg,Elk Hound,train,duplicado dentro del split
+train/Elk Hound/068.jpg,Elk Hound,train,duplicado dentro del split
+train/Elk Hound/097.jpg,Elk Hound,train,duplicado dentro del split
+train/French Bulldog/68.jpg,French Bulldog,train,duplicado dentro del split
+train/German Sheperd/008.jpg,German Sheperd,train,duplicado dentro del split
+train/German Sheperd/016.jpg,German Sheperd,train,duplicado dentro del split
+train/German Sheperd/018.jpg,German Sheperd,train,duplicado dentro del split
+train/Golden Retriever/010.jpg,Golden Retriever,train,duplicado dentro del split
+train/Golden Retriever/037.jpg,Golden Retriever,train,duplicado dentro del split
+train/Golden Retriever/040.jpg,Golden Retriever,train,duplicado dentro del split
+train/Great Perenees/63.jpg,Great Perenees,train,duplicado dentro del split
+train/Greyhound/005.jpg,Greyhound,train,duplicado dentro del split
+train/Greyhound/025.jpg,Greyhound,train,duplicado dentro del split
+train/Greyhound/028.jpg,Greyhound,train,duplicado dentro del split
+train/Greyhound/032.jpg,Greyhound,train,duplicado dentro del split
+train/Greyhound/033.jpg,Greyhound,train,duplicado dentro del split
+train/Groenendael/084.jpg,Groenendael,train,duplicado dentro del split
+train/Groenendael/085.jpg,Groenendael,train,duplicado dentro del split
+train/Groenendael/089.jpg,Groenendael,train,duplicado dentro del split
+train/Groenendael/096.jpg,Groenendael,train,duplicado dentro del split
+train/Groenendael/098.jpg,Groenendael,train,duplicado dentro del split
+train/Groenendael/099.jpg,Groenendael,train,duplicado dentro del split
+train/Groenendael/111.jpg,Groenendael,train,duplicado dentro del split
+train/Groenendael/113.jpg,Groenendael,train,duplicado dentro del split
+train/Groenendael/118.jpg,Groenendael,train,duplicado dentro del split
+train/Groenendael/119.jpg,Groenendael,train,duplicado dentro del split
+train/Irish Spaniel/028.jpg,Irish Spaniel,train,duplicado dentro del split
+train/Irish Spaniel/044.jpg,Irish Spaniel,train,duplicado dentro del split
+train/Irish Spaniel/063.jpg,Irish Spaniel,train,duplicado dentro del split
+train/Irish Spaniel/092.jpg,Irish Spaniel,train,duplicado dentro del split
+train/Irish Spaniel/101.jpg,Irish Spaniel,train,duplicado dentro del split
+train/Irish Spaniel/109.jpg,Irish Spaniel,train,duplicado dentro del split
+train/Irish Spaniel/110.jpg,Irish Spaniel,train,duplicado dentro del split
+train/Irish Spaniel/113.jpg,Irish Spaniel,train,duplicado dentro del split
+train/Japanese Spaniel/043.jpg,Japanese Spaniel,train,duplicado dentro del split
+train/Japanese Spaniel/055.jpg,Japanese Spaniel,train,duplicado dentro del split
+train/Japanese Spaniel/117.jpg,Japanese Spaniel,train,duplicado dentro del split
+train/Komondor/048.jpg,Komondor,train,duplicado dentro del split
+train/Komondor/068.jpg,Komondor,train,duplicado dentro del split
+train/Komondor/078.jpg,Komondor,train,duplicado dentro del split
+train/Komondor/081.jpg,Komondor,train,duplicado dentro del split
+train/Komondor/084.jpg,Komondor,train,duplicado dentro del split
+train/Komondor/085.jpg,Komondor,train,duplicado dentro del split
+train/Komondor/087.jpg,Komondor,train,duplicado dentro del split
+train/Komondor/094.jpg,Komondor,train,duplicado dentro del split
+train/Komondor/095.jpg,Komondor,train,duplicado dentro del split
+train/Komondor/098.jpg,Komondor,train,duplicado dentro del split
+train/Komondor/100.jpg,Komondor,train,duplicado dentro del split
+train/Komondor/101.jpg,Komondor,train,duplicado dentro del split
+train/Komondor/102.jpg,Komondor,train,duplicado dentro del split
+train/Komondor/105.jpg,Komondor,train,duplicado dentro del split
+train/Labradoodle/018.jpg,Labradoodle,train,duplicado dentro del split
+train/Labradoodle/022.jpg,Labradoodle,train,duplicado dentro del split
+train/Labradoodle/036.jpg,Labradoodle,train,duplicado dentro del split
+train/Labradoodle/039.jpg,Labradoodle,train,duplicado dentro del split
+train/Labradoodle/076.jpg,Labradoodle,train,duplicado dentro del split
+train/Labradoodle/077.jpg,Labradoodle,train,duplicado dentro del split
+train/Labrador/070.jpg,Labrador,train,duplicado dentro del split
+train/Labrador/092.jpg,Labrador,train,duplicado dentro del split
+train/Labrador/103.jpg,Labrador,train,duplicado dentro del split
+train/Labrador/108.jpg,Labrador,train,duplicado dentro del split
+train/Labrador/112.jpg,Labrador,train,duplicado dentro del split
+train/Labrador/118.jpg,Labrador,train,duplicado dentro del split
+train/Labrador/126.jpg,Labrador,train,duplicado dentro del split
+train/Labrador/127.jpg,Labrador,train,duplicado dentro del split
+train/Labrador/139.jpg,Labrador,train,duplicado dentro del split
+train/Labrador/141.jpg,Labrador,train,duplicado dentro del split
+train/Labrador/144.jpg,Labrador,train,duplicado dentro del split
+train/Labrador/146.jpg,Labrador,train,duplicado dentro del split
+train/Labrador/154.jpg,Labrador,train,duplicado dentro del split
+train/Lhasa/015.jpg,Lhasa,train,duplicado dentro del split
+train/Lhasa/016.jpg,Lhasa,train,duplicado dentro del split
+train/Lhasa/019.jpg,Lhasa,train,duplicado dentro del split
+train/Lhasa/035.jpg,Lhasa,train,duplicado dentro del split
+train/Lhasa/045.jpg,Lhasa,train,duplicado dentro del split
+train/Lhasa/048.jpg,Lhasa,train,duplicado dentro del split
+train/Lhasa/053.jpg,Lhasa,train,duplicado dentro del split
+train/Lhasa/070.jpg,Lhasa,train,duplicado dentro del split
+train/Lhasa/072.jpg,Lhasa,train,duplicado dentro del split
+train/Lhasa/076.jpg,Lhasa,train,duplicado dentro del split
+train/Lhasa/091.jpg,Lhasa,train,duplicado dentro del split
+train/Lhasa/102.jpg,Lhasa,train,duplicado dentro del split
+train/Lhasa/117.jpg,Lhasa,train,duplicado dentro del split
+train/Lhasa/124.jpg,Lhasa,train,duplicado dentro del split
+train/Lhasa/127.jpg,Lhasa,train,duplicado dentro del split
+train/Lhasa/141.jpg,Lhasa,train,duplicado dentro del split
+train/Lhasa/147.jpg,Lhasa,train,duplicado dentro del split
+train/Lhasa/158.jpg,Lhasa,train,duplicado dentro del split
+train/Lhasa/165.jpg,Lhasa,train,duplicado dentro del split
+train/Lhasa/175.jpg,Lhasa,train,duplicado dentro del split
+train/Lhasa/182.jpg,Lhasa,train,duplicado dentro del split
+train/Malinois/091.jpg,Malinois,train,duplicado dentro del split
+train/Maltese/006.jpg,Maltese,train,duplicado dentro del split
+train/Maltese/016.jpg,Maltese,train,duplicado dentro del split
+train/Maltese/036.jpg,Maltese,train,duplicado dentro del split
+train/Maltese/038.jpg,Maltese,train,duplicado dentro del split
+train/Maltese/039.jpg,Maltese,train,duplicado dentro del split
+train/Maltese/044.jpg,Maltese,train,duplicado dentro del split
+train/Maltese/045.jpg,Maltese,train,duplicado dentro del split
+train/Maltese/046.jpg,Maltese,train,duplicado dentro del split
+train/Maltese/105.jpg,Maltese,train,duplicado dentro del split
+train/Mex Hairless/35.jpg,Mex Hairless,train,duplicado dentro del split
+train/Mex Hairless/47.jpg,Mex Hairless,train,duplicado dentro del split
+train/Mex Hairless/86.jpg,Mex Hairless,train,duplicado dentro del split
+train/Mex Hairless/95.jpg,Mex Hairless,train,duplicado dentro del split
+train/Mex Hairless/96.jpg,Mex Hairless,train,duplicado dentro del split
+train/Mex Hairless/97.jpg,Mex Hairless,train,duplicado dentro del split
+train/Newfoundland/60.jpg,Newfoundland,train,duplicado dentro del split
+train/Newfoundland/65.jpg,Newfoundland,train,duplicado dentro del split
+train/Pekinese/081.jpg,Pekinese,train,duplicado dentro del split
+train/Pekinese/094.jpg,Pekinese,train,duplicado dentro del split
+train/Pekinese/096.jpg,Pekinese,train,duplicado dentro del split
+train/Pekinese/101.jpg,Pekinese,train,duplicado dentro del split
+train/Pekinese/103.jpg,Pekinese,train,duplicado dentro del split
+train/Pit Bull/050.jpg,Pit Bull,train,duplicado dentro del split
+train/Pit Bull/059.jpg,Pit Bull,train,duplicado dentro del split
+train/Pit Bull/061.jpg,Pit Bull,train,duplicado dentro del split
+train/Pit Bull/065.jpg,Pit Bull,train,duplicado dentro del split
+train/Pit Bull/067.jpg,Pit Bull,train,duplicado dentro del split
+train/Pit Bull/072.jpg,Pit Bull,train,duplicado dentro del split
+train/Pit Bull/073.jpg,Pit Bull,train,duplicado dentro del split
+train/Pit Bull/074.jpg,Pit Bull,train,duplicado dentro del split
+train/Pit Bull/080.jpg,Pit Bull,train,duplicado dentro del split
+train/Pit Bull/082.jpg,Pit Bull,train,duplicado dentro del split
+train/Pit Bull/085.jpg,Pit Bull,train,duplicado dentro del split
+train/Pit Bull/088.jpg,Pit Bull,train,duplicado dentro del split
+train/Pit Bull/095.jpg,Pit Bull,train,duplicado dentro del split
+train/Pit Bull/097.jpg,Pit Bull,train,duplicado dentro del split
+train/Pit Bull/098.jpg,Pit Bull,train,duplicado dentro del split
+train/Pit Bull/102.jpg,Pit Bull,train,duplicado dentro del split
+train/Pit Bull/104.jpg,Pit Bull,train,duplicado dentro del split
+train/Pit Bull/120.jpg,Pit Bull,train,duplicado dentro del split
+train/Poodle/041.jpg,Poodle,train,duplicado dentro del split
+train/Poodle/042.jpg,Poodle,train,duplicado dentro del split
+train/Poodle/047.jpg,Poodle,train,duplicado dentro del split
+train/Poodle/053.jpg,Poodle,train,duplicado dentro del split
+train/Poodle/055.jpg,Poodle,train,duplicado dentro del split
+train/Poodle/057.jpg,Poodle,train,duplicado dentro del split
+train/Poodle/058.jpg,Poodle,train,duplicado dentro del split
+train/Poodle/060.jpg,Poodle,train,duplicado dentro del split
+train/Poodle/076.jpg,Poodle,train,duplicado dentro del split
+train/Poodle/084.jpg,Poodle,train,duplicado dentro del split
+train/Poodle/090.jpg,Poodle,train,duplicado dentro del split
+train/Poodle/095.jpg,Poodle,train,duplicado dentro del split
+train/Poodle/097.jpg,Poodle,train,duplicado dentro del split
+train/Poodle/098.jpg,Poodle,train,duplicado dentro del split
+train/Poodle/099.jpg,Poodle,train,duplicado dentro del split
+train/Poodle/115.jpg,Poodle,train,duplicado dentro del split
+train/Pug/036.jpg,Pug,train,duplicado dentro del split
+train/Pug/039.jpg,Pug,train,duplicado dentro del split
+train/Pug/060.jpg,Pug,train,duplicado dentro del split
+train/Pug/061.jpg,Pug,train,duplicado dentro del split
+train/Pug/071.jpg,Pug,train,duplicado dentro del split
+train/Pug/073.jpg,Pug,train,duplicado dentro del split
+train/Rhodesian/021.jpg,Rhodesian,train,duplicado dentro del split
+train/Rhodesian/115.jpg,Rhodesian,train,duplicado dentro del split
+train/Rhodesian/118.jpg,Rhodesian,train,duplicado dentro del split
+train/Rhodesian/120.jpg,Rhodesian,train,duplicado dentro del split
+train/Schnauzer/116.jpg,Schnauzer,train,duplicado dentro del split
+train/Scotch Terrier/020.jpg,Scotch Terrier,train,duplicado dentro del split
+train/Scotch Terrier/027.jpg,Scotch Terrier,train,duplicado dentro del split
+train/Scotch Terrier/030.jpg,Scotch Terrier,train,duplicado dentro del split
+train/Scotch Terrier/039.jpg,Scotch Terrier,train,duplicado dentro del split
+train/Scotch Terrier/043.jpg,Scotch Terrier,train,duplicado dentro del split
+train/Scotch Terrier/050.jpg,Scotch Terrier,train,duplicado dentro del split
+train/Scotch Terrier/053.jpg,Scotch Terrier,train,duplicado dentro del split
+train/Scotch Terrier/059.jpg,Scotch Terrier,train,duplicado dentro del split
+train/Scotch Terrier/060.jpg,Scotch Terrier,train,duplicado dentro del split
+train/Shar_Pei/45.jpg,Shar_Pei,train,duplicado dentro del split
+train/Shiba Inu/43.jpg,Shiba Inu,train,duplicado dentro del split
+train/Shih-Tzu/025.jpg,Shih-Tzu,train,duplicado dentro del split
+train/Shih-Tzu/026.jpg,Shih-Tzu,train,duplicado dentro del split
+train/Shih-Tzu/038.jpg,Shih-Tzu,train,duplicado dentro del split
+train/Shih-Tzu/054.jpg,Shih-Tzu,train,duplicado dentro del split
+train/Shih-Tzu/179.jpg,Shih-Tzu,train,duplicado dentro del split
+train/Shih-Tzu/187.jpg,Shih-Tzu,train,duplicado dentro del split
+train/Shih-Tzu/196.jpg,Shih-Tzu,train,duplicado dentro del split
+train/Vizsla/09.jpg,Vizsla,train,duplicado dentro del split
+train/Vizsla/10.jpg,Vizsla,train,duplicado dentro del split
+train/Vizsla/23.jpg,Vizsla,train,duplicado dentro del split
+train/Vizsla/40.jpg,Vizsla,train,duplicado dentro del split
+train/Vizsla/41.jpg,Vizsla,train,duplicado dentro del split
+train/Vizsla/51.jpg,Vizsla,train,duplicado dentro del split
+train/Vizsla/55.jpg,Vizsla,train,duplicado dentro del split
+train/Vizsla/60.jpg,Vizsla,train,duplicado dentro del split
+train/Vizsla/67.jpg,Vizsla,train,duplicado dentro del split
+train/Vizsla/72.jpg,Vizsla,train,duplicado dentro del split
+train/Vizsla/79.jpg,Vizsla,train,duplicado dentro del split
+valid/Basenji/10.jpg,Basenji,valid,duplicado dentro del split
+valid/Cairn/10.jpg,Cairn,valid,duplicado dentro del split
+valid/Clumber/08.jpg,Clumber,valid,duplicado dentro del split
+valid/Elk Hound/10.jpg,Elk Hound,valid,duplicado dentro del split
+valid/Shar_Pei/10.jpg,Shar_Pei,valid,duplicado dentro del split
+valid/Yorkie/09.jpg,Yorkie,valid,duplicado dentro del split
+test/American Spaniel/07.jpg,American Spaniel,test,etiqueta contradictoria
+test/Irish Spaniel/06.jpg,Irish Spaniel,test,etiqueta contradictoria
+train/American Spaniel/35.jpg,American Spaniel,train,etiqueta contradictoria
+train/American Spaniel/42.jpg,American Spaniel,train,etiqueta contradictoria
+train/American Spaniel/53.jpg,American Spaniel,train,etiqueta contradictoria
+train/American Spaniel/61.jpg,American Spaniel,train,etiqueta contradictoria
+train/American Spaniel/68.jpg,American Spaniel,train,etiqueta contradictoria
+train/American Spaniel/86.jpg,American Spaniel,train,etiqueta contradictoria
+train/Blenheim/022.jpg,Blenheim,train,etiqueta contradictoria
+train/Blenheim/051.jpg,Blenheim,train,etiqueta contradictoria
+train/Border Collie/049.jpg,Border Collie,train,etiqueta contradictoria
+train/Border Collie/090.jpg,Border Collie,train,etiqueta contradictoria
+train/Boston Terrier/29.jpg,Boston Terrier,train,etiqueta contradictoria
+train/Bulldog/017.jpg,Bulldog,train,etiqueta contradictoria
+train/Bulldog/104.jpg,Bulldog,train,etiqueta contradictoria
+train/Cairn/083.jpg,Cairn,train,etiqueta contradictoria
+train/Cairn/087.jpg,Cairn,train,etiqueta contradictoria
+train/Cockapoo/041.jpg,Cockapoo,train,etiqueta contradictoria
+train/Collie/001.jpg,Collie,train,etiqueta contradictoria
+train/Collie/074.jpg,Collie,train,etiqueta contradictoria
+train/French Bulldog/93.jpg,French Bulldog,train,etiqueta contradictoria
+train/Irish Spaniel/036.jpg,Irish Spaniel,train,etiqueta contradictoria
+train/Irish Spaniel/100.jpg,Irish Spaniel,train,etiqueta contradictoria
+train/Irish Spaniel/103.jpg,Irish Spaniel,train,etiqueta contradictoria
+train/Irish Spaniel/105.jpg,Irish Spaniel,train,etiqueta contradictoria
+train/Irish Spaniel/114.jpg,Irish Spaniel,train,etiqueta contradictoria
+train/Irish Spaniel/118.jpg,Irish Spaniel,train,etiqueta contradictoria
+train/Japanese Spaniel/028.jpg,Japanese Spaniel,train,etiqueta contradictoria
+train/Japanese Spaniel/062.jpg,Japanese Spaniel,train,etiqueta contradictoria
+train/Labradoodle/030.jpg,Labradoodle,train,etiqueta contradictoria
+train/Lhasa/144.jpg,Lhasa,train,etiqueta contradictoria
+train/Lhasa/145.jpg,Lhasa,train,etiqueta contradictoria
+train/Rhodesian/103.jpg,Rhodesian,train,etiqueta contradictoria
+train/Rhodesian/105.jpg,Rhodesian,train,etiqueta contradictoria
+train/Rhodesian/123.jpg,Rhodesian,train,etiqueta contradictoria
+train/Scotch Terrier/047.jpg,Scotch Terrier,train,etiqueta contradictoria
+train/Shih-Tzu/018.jpg,Shih-Tzu,train,etiqueta contradictoria
+train/Vizsla/15.jpg,Vizsla,train,etiqueta contradictoria
+train/Vizsla/16.jpg,Vizsla,train,etiqueta contradictoria
+train/Vizsla/56.jpg,Vizsla,train,etiqueta contradictoria
+train/Vizsla/59.jpg,Vizsla,train,etiqueta contradictoria
+test/Afghan/02.jpg,Afghan,test,fuga entre splits
+test/Afghan/03.jpg,Afghan,test,fuga entre splits
+test/Afghan/04.jpg,Afghan,test,fuga entre splits
+test/African Wild Dog/03.jpg,African Wild Dog,test,fuga entre splits
+test/African Wild Dog/09.jpg,African Wild Dog,test,fuga entre splits
+test/Airedale/09.jpg,Airedale,test,fuga entre splits
+test/Airedale/10.jpg,Airedale,test,fuga entre splits
+test/American Hairless/07.jpg,American Hairless,test,fuga entre splits
+test/American Hairless/08.jpg,American Hairless,test,fuga entre splits
+test/American Spaniel/06.jpg,American Spaniel,test,fuga entre splits
+test/Basenji/01.jpg,Basenji,test,fuga entre splits
+test/Basenji/03.jpg,Basenji,test,fuga entre splits
+test/Basenji/04.jpg,Basenji,test,fuga entre splits
+test/Beagle/01.jpg,Beagle,test,fuga entre splits
+test/Beagle/05.jpg,Beagle,test,fuga entre splits
+test/Beagle/06.jpg,Beagle,test,fuga entre splits
+test/Beagle/08.jpg,Beagle,test,fuga entre splits
+test/Beagle/10.jpg,Beagle,test,fuga entre splits
+test/Bearded Collie/03.jpg,Bearded Collie,test,fuga entre splits
+test/Bichon Frise/02.jpg,Bichon Frise,test,fuga entre splits
+test/Bichon Frise/04.jpg,Bichon Frise,test,fuga entre splits
+test/Bichon Frise/06.jpg,Bichon Frise,test,fuga entre splits
+test/Bichon Frise/07.jpg,Bichon Frise,test,fuga entre splits
+test/Bichon Frise/08.jpg,Bichon Frise,test,fuga entre splits
+test/Bichon Frise/09.jpg,Bichon Frise,test,fuga entre splits
+test/Bichon Frise/10.jpg,Bichon Frise,test,fuga entre splits
+test/Border Collie/02.jpg,Border Collie,test,fuga entre splits
+test/Border Collie/03.jpg,Border Collie,test,fuga entre splits
+test/Border Collie/06.jpg,Border Collie,test,fuga entre splits
+test/Borzoi/07.jpg,Borzoi,test,fuga entre splits
+test/Boston Terrier/02.jpg,Boston Terrier,test,fuga entre splits
+test/Boston Terrier/10.jpg,Boston Terrier,test,fuga entre splits
+test/Boxer/01.jpg,Boxer,test,fuga entre splits
+test/Boxer/02.jpg,Boxer,test,fuga entre splits
+test/Boxer/06.jpg,Boxer,test,fuga entre splits
+test/Bull Mastiff/06.jpg,Bull Mastiff,test,fuga entre splits
+test/Bull Mastiff/10.jpg,Bull Mastiff,test,fuga entre splits
+test/Bull Terrier/02.jpg,Bull Terrier,test,fuga entre splits
+test/Bull Terrier/05.jpg,Bull Terrier,test,fuga entre splits
+test/Bull Terrier/08.jpg,Bull Terrier,test,fuga entre splits
+test/Bulldog/09.jpg,Bulldog,test,fuga entre splits
+test/Chihuahua/04.jpg,Chihuahua,test,fuga entre splits
+test/Chihuahua/05.jpg,Chihuahua,test,fuga entre splits
+test/Chinese Crested/07.jpg,Chinese Crested,test,fuga entre splits
+test/Clumber/08.jpg,Clumber,test,fuga entre splits
+test/Cockapoo/04.jpg,Cockapoo,test,fuga entre splits
+test/Cockapoo/06.jpg,Cockapoo,test,fuga entre splits
+test/Cockapoo/07.jpg,Cockapoo,test,fuga entre splits
+test/Cockapoo/09.jpg,Cockapoo,test,fuga entre splits
+test/Cockapoo/10.jpg,Cockapoo,test,fuga entre splits
+test/Coyote/08.jpg,Coyote,test,fuga entre splits
+test/Dalmation/02.jpg,Dalmation,test,fuga entre splits
+test/Dalmation/04.jpg,Dalmation,test,fuga entre splits
+test/Dalmation/05.jpg,Dalmation,test,fuga entre splits
+test/Dalmation/08.jpg,Dalmation,test,fuga entre splits
+test/Dhole/04.jpg,Dhole,test,fuga entre splits
+test/Dhole/07.jpg,Dhole,test,fuga entre splits
+test/Dhole/08.jpg,Dhole,test,fuga entre splits
+test/Dingo/03.jpg,Dingo,test,fuga entre splits
+test/Dingo/07.jpg,Dingo,test,fuga entre splits
+test/Doberman/01.jpg,Doberman,test,fuga entre splits
+test/Doberman/02.jpg,Doberman,test,fuga entre splits
+test/Doberman/03.jpg,Doberman,test,fuga entre splits
+test/Great Dane/10.jpg,Great Dane,test,fuga entre splits
+test/Greyhound/02.jpg,Greyhound,test,fuga entre splits
+test/Greyhound/04.jpg,Greyhound,test,fuga entre splits
+test/Greyhound/05.jpg,Greyhound,test,fuga entre splits
+test/Greyhound/08.jpg,Greyhound,test,fuga entre splits
+test/Greyhound/09.jpg,Greyhound,test,fuga entre splits
+test/Groenendael/03.jpg,Groenendael,test,fuga entre splits
+test/Irish Spaniel/05.jpg,Irish Spaniel,test,fuga entre splits
+test/Japanese Spaniel/10.jpg,Japanese Spaniel,test,fuga entre splits
+test/Komondor/10.jpg,Komondor,test,fuga entre splits
+test/Labradoodle/03.jpg,Labradoodle,test,fuga entre splits
+test/Labradoodle/04.jpg,Labradoodle,test,fuga entre splits
+test/Labradoodle/05.jpg,Labradoodle,test,fuga entre splits
+test/Labrador/01.jpg,Labrador,test,fuga entre splits
+test/Labrador/06.jpg,Labrador,test,fuga entre splits
+test/Labrador/08.jpg,Labrador,test,fuga entre splits
+test/Lhasa/01.jpg,Lhasa,test,fuga entre splits
+test/Lhasa/02.jpg,Lhasa,test,fuga entre splits
+test/Lhasa/03.jpg,Lhasa,test,fuga entre splits
+test/Lhasa/04.jpg,Lhasa,test,fuga entre splits
+test/Lhasa/06.jpg,Lhasa,test,fuga entre splits
+test/Lhasa/07.jpg,Lhasa,test,fuga entre splits
+test/Lhasa/08.jpg,Lhasa,test,fuga entre splits
+test/Lhasa/09.jpg,Lhasa,test,fuga entre splits
+test/Lhasa/10.jpg,Lhasa,test,fuga entre splits
+test/Malinois/04.jpg,Malinois,test,fuga entre splits
+test/Malinois/07.jpg,Malinois,test,fuga entre splits
+test/Maltese/09.jpg,Maltese,test,fuga entre splits
+test/Maltese/10.jpg,Maltese,test,fuga entre splits
+test/Mex Hairless/01.jpg,Mex Hairless,test,fuga entre splits
+test/Mex Hairless/04.jpg,Mex Hairless,test,fuga entre splits
+test/Mex Hairless/06.jpg,Mex Hairless,test,fuga entre splits
+test/Mex Hairless/07.jpg,Mex Hairless,test,fuga entre splits
+test/Mex Hairless/08.jpg,Mex Hairless,test,fuga entre splits
+test/Pekinese/07.jpg,Pekinese,test,fuga entre splits
+test/Pit Bull/03.jpg,Pit Bull,test,fuga entre splits
+test/Pit Bull/05.jpg,Pit Bull,test,fuga entre splits
+test/Pit Bull/07.jpg,Pit Bull,test,fuga entre splits
+test/Rhodesian/02.jpg,Rhodesian,test,fuga entre splits
+test/Rhodesian/03.jpg,Rhodesian,test,fuga entre splits
+test/Rhodesian/07.jpg,Rhodesian,test,fuga entre splits
+test/Rhodesian/08.jpg,Rhodesian,test,fuga entre splits
+test/Rhodesian/09.jpg,Rhodesian,test,fuga entre splits
+test/Rhodesian/10.jpg,Rhodesian,test,fuga entre splits
+test/Saint Bernard/01.jpg,Saint Bernard,test,fuga entre splits
+test/Schnauzer/02.jpg,Schnauzer,test,fuga entre splits
+test/Schnauzer/03.jpg,Schnauzer,test,fuga entre splits
+test/Schnauzer/04.jpg,Schnauzer,test,fuga entre splits
+test/Schnauzer/05.jpg,Schnauzer,test,fuga entre splits
+test/Schnauzer/06.jpg,Schnauzer,test,fuga entre splits
+test/Schnauzer/08.jpg,Schnauzer,test,fuga entre splits
+test/Schnauzer/10.jpg,Schnauzer,test,fuga entre splits
+test/Shar_Pei/01.jpg,Shar_Pei,test,fuga entre splits
+test/Shar_Pei/04.jpg,Shar_Pei,test,fuga entre splits
+test/Shiba Inu/08.jpg,Shiba Inu,test,fuga entre splits
+test/Shiba Inu/09.jpg,Shiba Inu,test,fuga entre splits
+test/Shih-Tzu/01.jpg,Shih-Tzu,test,fuga entre splits
+test/Shih-Tzu/04.jpg,Shih-Tzu,test,fuga entre splits
+test/Shih-Tzu/08.jpg,Shih-Tzu,test,fuga entre splits
+test/Shih-Tzu/09.jpg,Shih-Tzu,test,fuga entre splits
+test/Vizsla/01.jpg,Vizsla,test,fuga entre splits
+test/Vizsla/02.jpg,Vizsla,test,fuga entre splits
+test/Vizsla/06.jpg,Vizsla,test,fuga entre splits
+test/Vizsla/08.jpg,Vizsla,test,fuga entre splits
+test/Vizsla/10.jpg,Vizsla,test,fuga entre splits
+valid/African Wild Dog/03.jpg,African Wild Dog,valid,fuga entre splits
+valid/American  Spaniel/01.jpg,American Spaniel,valid,fuga entre splits
+valid/Basenji/02.jpg,Basenji,valid,fuga entre splits
+valid/Basenji/03.jpg,Basenji,valid,fuga entre splits
+valid/Basenji/04.jpg,Basenji,valid,fuga entre splits
+valid/Basenji/08.jpg,Basenji,valid,fuga entre splits
+valid/Basset/06.jpg,Basset,valid,fuga entre splits
+valid/Beagle/01.jpg,Beagle,valid,fuga entre splits
+valid/Bearded Collie/07.jpg,Bearded Collie,valid,fuga entre splits
+valid/Bichon Frise/01.jpg,Bichon Frise,valid,fuga entre splits
+valid/Bichon Frise/02.jpg,Bichon Frise,valid,fuga entre splits
+valid/Bichon Frise/03.jpg,Bichon Frise,valid,fuga entre splits
+valid/Bichon Frise/04.jpg,Bichon Frise,valid,fuga entre splits
+valid/Bichon Frise/06.jpg,Bichon Frise,valid,fuga entre splits
+valid/Bichon Frise/07.jpg,Bichon Frise,valid,fuga entre splits
+valid/Bichon Frise/10.jpg,Bichon Frise,valid,fuga entre splits
+valid/Bluetick/01.jpg,Bluetick,valid,fuga entre splits
+valid/Bluetick/10.jpg,Bluetick,valid,fuga entre splits
+valid/Border Collie/01.jpg,Border Collie,valid,fuga entre splits
+valid/Border Collie/05.jpg,Border Collie,valid,fuga entre splits
+valid/Borzoi/01.jpg,Borzoi,valid,fuga entre splits
+valid/Borzoi/03.jpg,Borzoi,valid,fuga entre splits
+valid/Borzoi/04.jpg,Borzoi,valid,fuga entre splits
+valid/Borzoi/06.jpg,Borzoi,valid,fuga entre splits
+valid/Boxer/02.jpg,Boxer,valid,fuga entre splits
+valid/Boxer/03.jpg,Boxer,valid,fuga entre splits
+valid/Boxer/04.jpg,Boxer,valid,fuga entre splits
+valid/Boxer/06.jpg,Boxer,valid,fuga entre splits
+valid/Boxer/09.jpg,Boxer,valid,fuga entre splits
+valid/Boxer/10.jpg,Boxer,valid,fuga entre splits
+valid/Bull Terrier/02.jpg,Bull Terrier,valid,fuga entre splits
+valid/Bull Terrier/06.jpg,Bull Terrier,valid,fuga entre splits
+valid/Bull Terrier/10.jpg,Bull Terrier,valid,fuga entre splits
+valid/Bulldog/02.jpg,Bulldog,valid,fuga entre splits
+valid/Bulldog/10.jpg,Bulldog,valid,fuga entre splits
+valid/Chihuahua/02.jpg,Chihuahua,valid,fuga entre splits
+valid/Chihuahua/05.jpg,Chihuahua,valid,fuga entre splits
+valid/Chinese Crested/02.jpg,Chinese Crested,valid,fuga entre splits
+valid/Chinese Crested/05.jpg,Chinese Crested,valid,fuga entre splits
+valid/Chinese Crested/06.jpg,Chinese Crested,valid,fuga entre splits
+valid/Chinese Crested/07.jpg,Chinese Crested,valid,fuga entre splits
+valid/Chinese Crested/08.jpg,Chinese Crested,valid,fuga entre splits
+valid/Chinese Crested/09.jpg,Chinese Crested,valid,fuga entre splits
+valid/Chinese Crested/10.jpg,Chinese Crested,valid,fuga entre splits
+valid/Clumber/02.jpg,Clumber,valid,fuga entre splits
+valid/Clumber/04.jpg,Clumber,valid,fuga entre splits
+valid/Clumber/09.jpg,Clumber,valid,fuga entre splits
+valid/Cockapoo/03.jpg,Cockapoo,valid,fuga entre splits
+valid/Cockapoo/05.jpg,Cockapoo,valid,fuga entre splits
+valid/Cockapoo/09.jpg,Cockapoo,valid,fuga entre splits
+valid/Cockapoo/10.jpg,Cockapoo,valid,fuga entre splits
+valid/Cocker/05.jpg,Cocker,valid,fuga entre splits
+valid/Cocker/07.jpg,Cocker,valid,fuga entre splits
+valid/Dalmation/02.jpg,Dalmation,valid,fuga entre splits
+valid/Dhole/01.jpg,Dhole,valid,fuga entre splits
+valid/Dhole/05.jpg,Dhole,valid,fuga entre splits
+valid/Dhole/06.jpg,Dhole,valid,fuga entre splits
+valid/Dhole/08.jpg,Dhole,valid,fuga entre splits
+valid/Dhole/09.jpg,Dhole,valid,fuga entre splits
+valid/Dingo/05.jpg,Dingo,valid,fuga entre splits
+valid/Dingo/10.jpg,Dingo,valid,fuga entre splits
+valid/Doberman/01.jpg,Doberman,valid,fuga entre splits
+valid/Doberman/02.jpg,Doberman,valid,fuga entre splits
+valid/Elk Hound/01.jpg,Elk Hound,valid,fuga entre splits
+valid/Elk Hound/08.jpg,Elk Hound,valid,fuga entre splits
+valid/Elk Hound/09.jpg,Elk Hound,valid,fuga entre splits
+valid/Golden Retriever/05.jpg,Golden Retriever,valid,fuga entre splits
+valid/Golden Retriever/10.jpg,Golden Retriever,valid,fuga entre splits
+valid/Groenendael/02.jpg,Groenendael,valid,fuga entre splits
+valid/Irish Spaniel/01.jpg,Irish Spaniel,valid,fuga entre splits
+valid/Irish Spaniel/02.jpg,Irish Spaniel,valid,fuga entre splits
+valid/Irish Spaniel/06.jpg,Irish Spaniel,valid,fuga entre splits
+valid/Irish Spaniel/07.jpg,Irish Spaniel,valid,fuga entre splits
+valid/Irish Spaniel/08.jpg,Irish Spaniel,valid,fuga entre splits
+valid/Irish Spaniel/09.jpg,Irish Spaniel,valid,fuga entre splits
+valid/Japanese Spaniel/10.jpg,Japanese Spaniel,valid,fuga entre splits
+valid/Labradoodle/01.jpg,Labradoodle,valid,fuga entre splits
+valid/Labradoodle/02.jpg,Labradoodle,valid,fuga entre splits
+valid/Labradoodle/03.jpg,Labradoodle,valid,fuga entre splits
+valid/Labradoodle/04.jpg,Labradoodle,valid,fuga entre splits
+valid/Labradoodle/05.jpg,Labradoodle,valid,fuga entre splits
+valid/Labradoodle/07.jpg,Labradoodle,valid,fuga entre splits
+valid/Labradoodle/08.jpg,Labradoodle,valid,fuga entre splits
+valid/Labradoodle/09.jpg,Labradoodle,valid,fuga entre splits
+valid/Labradoodle/10.jpg,Labradoodle,valid,fuga entre splits
+valid/Lhasa/09.jpg,Lhasa,valid,fuga entre splits
+valid/Mex Hairless/01.jpg,Mex Hairless,valid,fuga entre splits
+valid/Mex Hairless/02.jpg,Mex Hairless,valid,fuga entre splits
+valid/Mex Hairless/03.jpg,Mex Hairless,valid,fuga entre splits
+valid/Mex Hairless/06.jpg,Mex Hairless,valid,fuga entre splits
+valid/Pekinese/04.jpg,Pekinese,valid,fuga entre splits
+valid/Pit Bull/01.jpg,Pit Bull,valid,fuga entre splits
+valid/Pit Bull/02.jpg,Pit Bull,valid,fuga entre splits
+valid/Pit Bull/03.jpg,Pit Bull,valid,fuga entre splits
+valid/Pit Bull/04.jpg,Pit Bull,valid,fuga entre splits
+valid/Pit Bull/05.jpg,Pit Bull,valid,fuga entre splits
+valid/Pit Bull/06.jpg,Pit Bull,valid,fuga entre splits
+valid/Pit Bull/10.jpg,Pit Bull,valid,fuga entre splits
+valid/Poodle/01.jpg,Poodle,valid,fuga entre splits
+valid/Poodle/02.jpg,Poodle,valid,fuga entre splits
+valid/Poodle/03.jpg,Poodle,valid,fuga entre splits
+valid/Poodle/05.jpg,Poodle,valid,fuga entre splits
+valid/Rhodesian/04.jpg,Rhodesian,valid,fuga entre splits
+valid/Scotch Terrier/01.jpg,Scotch Terrier,valid,fuga entre splits
+valid/Shar_Pei/01.jpg,Shar_Pei,valid,fuga entre splits
+valid/Shar_Pei/04.jpg,Shar_Pei,valid,fuga entre splits
+valid/Shar_Pei/08.jpg,Shar_Pei,valid,fuga entre splits
+valid/Shih-Tzu/08.jpg,Shih-Tzu,valid,fuga entre splits
+valid/Vizsla/02.jpg,Vizsla,valid,fuga entre splits
+valid/Vizsla/03.jpg,Vizsla,valid,fuga entre splits
+valid/Vizsla/05.jpg,Vizsla,valid,fuga entre splits
+valid/Vizsla/07.jpg,Vizsla,valid,fuga entre splits
+valid/Vizsla/10.jpg,Vizsla,valid,fuga entre splits
+valid/Yorkie/01.jpg,Yorkie,valid,fuga entre splits
+valid/Yorkie/06.jpg,Yorkie,valid,fuga entre splits
