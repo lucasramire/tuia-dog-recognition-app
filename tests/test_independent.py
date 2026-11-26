@@ -77,3 +77,87 @@ def test_registry_template_has_expected_columns():
 
     template = Path(__file__).resolve().parents[1] / "data" / "splits" / "independent_v1.csv"
     assert list(load_registry(template).columns) == COLUMNS
+
+
+# --- validacion, resumen y fuga ---------------------------------------------------
+
+import numpy as np  # noqa: E402
+import pandas as pd  # noqa: E402
+
+from lib.dataset.independent import (  # noqa: E402
+    dataset_leaks,
+    internal_near_duplicates,
+    summarize_registry,
+    validate_registry,
+)
+from lib.dataset.quality import DuplicateCriterion  # noqa: E402
+
+
+def _row(path, breed="Pug", scene="single", n_dogs="1", source="wikimedia", url="https://x/1", license="CC0", **kw):
+    row = dict.fromkeys(COLUMNS, "")
+    row.update(path=path, breed=breed, scene=scene, n_dogs=n_dogs, source=source, url=url, author="Ana",
+               license=license, collector="lucas", people="none")
+    row.update(kw)
+    return row
+
+
+def _registry(rows):
+    return pd.DataFrame(rows, columns=COLUMNS)
+
+
+def test_validate_registry_ok_and_problems(tmp_path):
+    import cv2
+
+    (tmp_path / "independent" / "Pug").mkdir(parents=True)
+    cv2.imwrite(str(tmp_path / "independent/Pug/pug_01.jpg"), np.zeros((300, 300, 3), np.uint8))
+    cv2.imwrite(str(tmp_path / "independent/Pug/pug_02.jpg"), np.zeros((100, 300, 3), np.uint8))
+    ok = _registry([_row("independent/Pug/pug_01.jpg")])
+    assert validate_registry(ok, tmp_path, ["Pug"]).empty
+
+    bad = _registry([
+        _row("independent/Pug/pug_02.jpg", url="https://x/2"),  # lado menor 100
+        _row("independent/Pug/pug_03.jpg", url="https://x/3", license="CC BY-NC 2.0"),  # no existe, NC
+        _row("independent/_multi/m_01.jpg", breed="multiple", scene="multiple", n_dogs="1", url="https://x/4"),
+        _row("independent/Pug/pug_04.jpg", source="own", url="", license="CC0"),  # own sin license own
+        _row("independent/Pug/pug_05.jpg", url="https://x/1", people="si"),
+        _row("independent/Pug/pug_06.jpg", url="https://x/1"),  # url repetida con la anterior
+    ])
+    problems = validate_registry(bad, tmp_path, ["Pug"])
+    text = " | ".join(problems["problem"])
+    for expected in ["lado menor 100", "licencia no aceptada", "no existe el archivo", "escena multiple",
+                     "license = own", "people invalido", "misma url"]:
+        assert expected in text, expected
+
+
+def test_summarize_registry_counts():
+    table = _registry([
+        _row("a", url="1"), _row("b", url="2"), _row("c", breed="Beagle", url="3"),
+        _row("d", breed="none", scene="no_dog", n_dogs="0", url="4"),
+    ])
+    s = summarize_registry(table)
+    assert s["por_raza"].loc["Pug", "imagenes"] == 2
+    assert s["por_escena"].loc["no_dog", "imagenes"] == 1
+    assert s["por_escena"].loc["multiple", "imagenes"] == 0
+
+
+def test_dataset_leaks_uses_criterion():
+    criterion = DuplicateCriterion(max_phash_distance=8, min_cosine_with_phash=0.90, min_cosine_alone=0.97)
+    ds_emb = np.array([[1.0, 0.0], [0.0, 1.0], [0.6, 0.8]], dtype=np.float32)
+    ds_hash = np.array([0, 0xFFFF, 0xFFFFFFFF], dtype=np.uint64)
+    ind_emb = np.array([[0.93, 0.37], [0.7, 0.71], [0.0, 1.0]], dtype=np.float32)
+    ind_hash = np.array([0b111, 0xFFFFFFFFFFFF, 0xFFFFFFFFFFFF], dtype=np.uint64)
+    out = dataset_leaks(ind_hash, ind_emb, ds_hash, ds_emb, ["a", "b", "c"], criterion)
+    # 0: pHash a distancia 3 de "a" y coseno ~0,93 -> fuga por pHash + coseno.
+    # 1: coseno con "c" ~0,98 -> fuga por coseno solo.
+    # 2: igual a "b" en embedding (coseno 1) -> fuga.
+    assert out["leak"].tolist() == [True, True, True]
+    assert out.loc[0, "leak_with"] == "a"
+    ind_far = np.array([[0.9, -0.44]], dtype=np.float32)
+    far = dataset_leaks(np.array([0xFFFFFFFFFFFFFFFF], dtype=np.uint64), ind_far, ds_hash, ds_emb, ["a", "b", "c"], criterion)
+    assert not far.loc[0, "leak"] and far.loc[0, "nearest"] == "a"
+
+
+def test_internal_near_duplicates():
+    emb = np.array([[1, 0], [0.99, 0.14], [0, 1]], dtype=np.float32)
+    pairs = internal_near_duplicates(emb, 0.95)
+    assert pairs[["i", "j"]].values.tolist() == [[0, 1]]
