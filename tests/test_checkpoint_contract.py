@@ -36,6 +36,17 @@ def test_roundtrip_keeps_classes_dim_and_outputs(tmp_path: Path) -> None:
     torch.testing.assert_close(loaded.embed(x), model.embed(x))
 
 
+def test_save_does_not_change_original_device_or_mode(tmp_path: Path) -> None:
+    device = "cuda" if torch.cuda.is_available() else "cpu"
+    model = DummyEmbeddingClassifier(CLASSES).to(device).train()
+    save_checkpoint(model, tmp_path / "m.pth")
+    assert model.training
+    assert next(model.parameters()).device.type == device
+    loaded = load_checkpoint(tmp_path / "m.pth")
+    assert not loaded.training
+    assert next(loaded.parameters()).device.type == "cpu"
+
+
 def test_seed_is_reproducible() -> None:
     a = DummyEmbeddingClassifier(CLASSES, seed=1)
     b = DummyEmbeddingClassifier(CLASSES, seed=1)

@@ -18,6 +18,7 @@ La clase concreta debe ser importable desde `src/lib/` (por ejemplo
 
 from __future__ import annotations
 
+import copy
 import logging
 from abc import ABC, abstractmethod
 from pathlib import Path
@@ -69,13 +70,18 @@ def validate_model_contract(model: object) -> None:
 
 
 def save_checkpoint(model: EmbeddingClassifier, path: Path) -> None:
-    """Guarda el modelo completo (no el state_dict) validando el contrato."""
+    """Guarda el modelo completo (no el state_dict) validando el contrato.
+
+    Guarda una copia en CPU y en modo evaluacion: el modelo recibido conserva su
+    dispositivo y su modo, asi se puede guardar el mejor checkpoint a mitad del
+    entrenamiento sin afectar las epocas siguientes.
+    """
     validate_model_contract(model)
     path = Path(path)
     path.parent.mkdir(parents=True, exist_ok=True)
-    model = model.cpu().eval()
-    torch.save(model, path)
-    logger.info("Checkpoint guardado en %s (%d razas, embedding %d)", path, model.num_classes, model.embedding_dim)
+    snapshot = copy.deepcopy(model).cpu().eval()
+    torch.save(snapshot, path)
+    logger.info("Checkpoint guardado en %s (%d razas, embedding %d)", path, snapshot.num_classes, snapshot.embedding_dim)
 
 
 def load_checkpoint(path: Path) -> EmbeddingClassifier:
