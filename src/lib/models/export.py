@@ -12,7 +12,6 @@ import json
 import logging
 from pathlib import Path
 
-import onnx
 import torch
 
 from lib.models.base import EmbeddingClassifier, validate_model_contract
@@ -24,6 +23,10 @@ ONNX_EMBEDDING_DIM_KEY = "embedding_dim"
 
 
 def export_onnx(model: EmbeddingClassifier, path: Path, image_size: int, opset: int = 17) -> Path:
+    # Import diferido: el paquete onnx solo hace falta para exportar. Importarlo arriba
+    # rompia cualquier import de los servicios donde no esta instalado (por ejemplo Colab).
+    import onnx
+
     validate_model_contract(model)
     path = Path(path)
     path.parent.mkdir(parents=True, exist_ok=True)
