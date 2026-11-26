@@ -92,36 +92,43 @@ def _safe_name(title: str) -> str:
 
 
 def cmd_fetch(args: argparse.Namespace) -> int:
-    client = CommonsClient()
+    client = CommonsClient(pause=args.pause)
     out: Path = args.out
     candidates_csv = out / "candidates.csv"
     previous = pd.read_csv(candidates_csv, dtype=str, keep_default_na=False) if candidates_csv.exists() else pd.DataFrame(columns=CANDIDATE_COLUMNS)
     registered = set(load_registry(args.registry)["url"]) if args.registry.exists() else set()
     known_urls = registered | set(previous["url"])
 
-    rows = []
+    out.mkdir(parents=True, exist_ok=True)
+    table = previous
     for breed in resolve_breeds(args):
+        if (table["breed"] == breed).any():
+            logger.info("%s: ya tiene candidatas en %s, se saltea", breed, candidates_csv)
+            continue
         found = client.candidates(breed, COMMONS_CATEGORIES[breed], min_side=args.min_side)
         fresh = [c for c in found if c.page_url not in known_urls]
         chosen = pick_diverse(fresh, args.per_breed, args.max_per_author, args.seed)
-        for k, c in enumerate(chosen, start=1):
-            suffix = Path(urlparse(c.thumb_url).path).suffix.lower() or ".jpg"
-            path = out / breed / f"{k:02d}_{_safe_name(c.title)}{suffix}"
-            try:
-                client.download(c.thumb_url, path)
-            except Exception as exc:  # una descarga fallida no frena al resto
-                logger.warning("No se pudo bajar %s: %s", c.page_url, exc)
-                continue
-            rows.append({
-                "file": path.relative_to(out).as_posix(), "breed": breed, "url": c.page_url,
-                "author": c.author, "license": c.license, "license_url": c.license_url,
-                "retrieved": date.today().isoformat(), "width": c.width, "height": c.height,
-            })
-        logger.info("%s: %d bajadas en %s", breed, sum(r["breed"] == breed for r in rows), out / breed)
+        rows = []
+        try:
+            for k, c in enumerate(chosen, start=1):
+                suffix = Path(urlparse(c.thumb_url).path).suffix.lower() or ".jpg"
+                path = out / breed / f"{k:02d}_{_safe_name(c.title)}{suffix}"
+                try:
+                    client.download(c.thumb_url, path)
+                except OSError as exc:  # error de red de una imagen: sigue con el resto (un pedido de espera larga si corta)
+                    logger.warning("No se pudo bajar %s: %s", c.page_url, exc)
+                    continue
+                rows.append({
+                    "file": path.relative_to(out).as_posix(), "breed": breed, "url": c.page_url,
+                    "author": c.author, "license": c.license, "license_url": c.license_url,
+                    "retrieved": date.today().isoformat(), "width": c.width, "height": c.height,
+                })
+        finally:
+            # Se guarda aunque se corte a mitad de la raza (por ejemplo, por un 429): lo bajado queda registrado.
+            table = pd.concat([table, pd.DataFrame(rows, columns=CANDIDATE_COLUMNS)], ignore_index=True)
+            table.to_csv(candidates_csv, index=False, encoding="utf-8")
+            logger.info("%s: %d bajadas en %s", breed, len(rows), out / breed)
 
-    table = pd.concat([previous, pd.DataFrame(rows, columns=CANDIDATE_COLUMNS)], ignore_index=True)
-    out.mkdir(parents=True, exist_ok=True)
-    table.to_csv(candidates_csv, index=False, encoding="utf-8")
     logger.info("Listo: revisar %s, borrar las que no sirven y correr `accept`.", out)
     return 0
 
@@ -175,6 +182,7 @@ def main() -> int:
     parser.add_argument("--max-per-author", type=int, default=2, help="evita varias fotos de una misma sesion")
     parser.add_argument("--min-side", type=int, default=224)
     parser.add_argument("--seed", type=int, default=42)
+    parser.add_argument("--pause", type=float, default=1.0, help="segundos entre pedidos (subir si Commons responde 429)")
     parser.add_argument("--dataset", type=Path, default=ROOT / "data" / "dataset")
     parser.add_argument("--out", type=Path, default=ROOT / "data" / "dataset" / "independent_candidates")
     parser.add_argument("--registry", type=Path, default=ROOT / "data" / "splits" / "independent_v1.csv")

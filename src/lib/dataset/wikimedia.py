@@ -72,6 +72,9 @@ _SKIP_SUBCATEGORY = re.compile(
     re.IGNORECASE,
 )
 _IMAGE_MIMES = {"image/jpeg", "image/png"}
+# Wikimedia limita (429) las miniaturas de anchos no estandar; 960 es uno de los estandar.
+THUMB_WIDTH = 960
+MAX_RETRY_WAIT = 120.0
 
 
 @dataclass
@@ -166,6 +169,11 @@ class CommonsClient:
                 response.raise_for_status()
             retry_after = response.headers.get("Retry-After", "")
             wait = float(retry_after) if retry_after.isdigit() else 5.0 * 2**attempt
+            if wait > MAX_RETRY_WAIT:
+                raise RuntimeError(
+                    f"Commons pide esperar {wait:.0f} s ({response.status_code}) para {url}. "
+                    "Volver a correr mas tarde: lo ya bajado queda registrado."
+                )
             logger.warning("Commons respondio %d; reintento en %.0f s", response.status_code, wait)
             time.sleep(wait)
         raise AssertionError("no se alcanza")
@@ -240,7 +248,7 @@ class CommonsClient:
         return found
 
     def candidates(
-        self, breed: str, category: str, min_side: int = 224, max_files: int = 400, thumb_width: int = 800
+        self, breed: str, category: str, min_side: int = 224, max_files: int = 400, thumb_width: int = THUMB_WIDTH
     ) -> list[Candidate]:
         """Candidatas de la categoria y de sus subcategorias directas (salteando arte, cruzas, etc.)."""
         categories = [category] + [s for s in self.subcategories(category) if not _SKIP_SUBCATEGORY.search(s)]
