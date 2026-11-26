@@ -116,3 +116,13 @@ def test_transforms_are_picklable_for_dataloader_workers(train: bool) -> None:
 
 def test_pipeline_is_albumentations_compose() -> None:
     assert isinstance(build_train_augmentation(seed=0), A.Compose)
+
+
+def test_single_transform_examples_shapes_and_flip():
+    from lib.dataset.augmentation import single_transform_examples
+
+    image = np.random.default_rng(1).integers(0, 256, size=(60, 80, 3), dtype=np.uint8)
+    out = single_transform_examples(image, n=2)
+    assert len(out) == 6 and all(len(v) == 2 for v in out.values())
+    np.testing.assert_array_equal(out["flip horizontal"][0], image[:, ::-1])
+    assert all(img.dtype == np.uint8 and img.ndim == 3 for imgs in out.values() for img in imgs)

@@ -100,3 +100,15 @@ def test_invalid_size_raises() -> None:
 def test_empty_batch_raises() -> None:
     with pytest.raises(ValueError):
         preprocess_batch([], SIZE)
+
+
+def test_denormalize_image_inverts_preprocessing():
+    from lib.vision.preprocessing import denormalize_image, preprocess_image
+
+    rng = np.random.default_rng(0)
+    bgr = rng.integers(0, 256, size=(32, 32, 3), dtype=np.uint8)
+    rgb = denormalize_image(preprocess_image(bgr, 32))
+    np.testing.assert_allclose(rgb.astype(int), bgr[:, :, ::-1].astype(int), atol=1)
+    # El padding de una imagen alargada vuelve como la media de ImageNet.
+    wide = denormalize_image(preprocess_image(np.zeros((10, 40, 3), np.uint8), 40))
+    np.testing.assert_allclose(wide[0, 0], np.round(np.array([0.485, 0.456, 0.406]) * 255), atol=1)

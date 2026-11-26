@@ -173,3 +173,34 @@ def augmentation_examples(
     """`n` versiones aumentadas de una misma imagen (BGR uint8), para la grilla de la notebook."""
     augmentation = build_train_augmentation(config, seed)
     return [augmentation(image=image_bgr)["image"] for _ in range(n)]
+
+
+def single_transform_examples(
+    image_bgr: np.ndarray, config: AugmentationConfig = AugmentationConfig(), n: int = 3, seed: int = 0
+) -> dict[str, list[np.ndarray]]:
+    """Cada transformacion sola, siempre aplicada (p=1) y con los rangos de `config`.
+
+    Sirve para justificar en la notebook cada transformacion y su rango por separado; el
+    pipeline de entrenamiento las combina con sus probabilidades (`build_train_augmentation`).
+    """
+    transforms = {
+        "recorte desde los bordes": A.RandomCropFromBorders(
+            crop_left=config.crop_border, crop_right=config.crop_border,
+            crop_top=config.crop_border, crop_bottom=config.crop_border, p=1.0,
+        ),
+        "flip horizontal": A.HorizontalFlip(p=1.0),
+        f"rotacion +-{config.rotate_degrees:g} grados": A.Affine(
+            rotate=(-config.rotate_degrees, config.rotate_degrees),
+            border_mode=cv2.BORDER_CONSTANT, fill=IMAGENET_MEAN_BGR, p=1.0,
+        ),
+        "brillo y contraste": A.RandomBrightnessContrast(
+            brightness_limit=config.brightness, contrast_limit=config.contrast, p=1.0
+        ),
+        "desenfoque gaussiano": A.GaussianBlur(blur_limit=0, sigma_limit=config.blur_sigma, p=1.0),
+        "ruido gaussiano": A.GaussNoise(std_range=config.noise_std, p=1.0),
+    }
+    out: dict[str, list[np.ndarray]] = {}
+    for k, (name, transform) in enumerate(transforms.items()):
+        transform.set_random_seed(seed + k)
+        out[name] = [transform(image=image_bgr)["image"] for _ in range(n)]
+    return out

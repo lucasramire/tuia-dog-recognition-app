@@ -87,3 +87,15 @@ def preprocess_to_tensor(image_bgr: np.ndarray, image_size: int | None = None):
     import torch
 
     return torch.from_numpy(preprocess_image(image_bgr, image_size))
+
+
+def denormalize_image(chw: np.ndarray) -> np.ndarray:
+    """Inversa de `preprocess_image` para mostrar: (3, S, S) normalizado -> RGB uint8 (S, S, 3).
+
+    El padding (0 tras normalizar) vuelve a la media de ImageNet: un gris neutro.
+    """
+    array = np.asarray(chw, dtype=np.float32)
+    if array.ndim != 3 or array.shape[0] != 3:
+        raise ValueError(f"Se esperaba un arreglo (3, S, S), llego shape={array.shape}")
+    rgb = array.transpose(1, 2, 0) * IMAGENET_STD + IMAGENET_MEAN
+    return np.clip(np.round(rgb * 255.0), 0, 255).astype(np.uint8)
