@@ -102,15 +102,20 @@ def cmd_fetch(args: argparse.Namespace) -> int:
     out.mkdir(parents=True, exist_ok=True)
     table = previous
     for breed in resolve_breeds(args):
-        if (table["breed"] == breed).any():
-            logger.info("%s: ya tiene candidatas en %s, se saltea", breed, candidates_csv)
+        if (table["breed"] == breed).any() and not args.more:
+            logger.info("%s: ya tiene candidatas en %s, se saltea (usar --more para pedir mas)", breed, candidates_csv)
             continue
         found = client.candidates(breed, COMMONS_CATEGORIES[breed], min_side=args.min_side)
+        # Fuera todo lo ya visto: registrado, aceptado, borrado en la revision o rechazado.
         fresh = [c for c in found if c.page_url not in known_urls]
         chosen = pick_diverse(fresh, args.per_breed, args.max_per_author, args.seed)
+        logger.info("%s: %d candidatas nuevas (sin contar las ya vistas)", breed, len(fresh))
+        # Con --more la numeracion sigue despues de los archivos que ya hay en la carpeta.
+        existing = [int(m.group(1)) for p in (out / breed).glob("*") if (m := re.match(r"^(\d+)_", p.name))]
+        start = max(existing, default=0) + 1
         rows = []
         try:
-            for k, c in enumerate(chosen, start=1):
+            for k, c in enumerate(chosen, start=start):
                 suffix = Path(urlparse(c.thumb_url).path).suffix.lower() or ".jpg"
                 path = out / breed / f"{k:02d}_{_safe_name(c.title)}{suffix}"
                 try:
@@ -183,6 +188,7 @@ def main() -> int:
     parser.add_argument("--min-side", type=int, default=224)
     parser.add_argument("--seed", type=int, default=42)
     parser.add_argument("--pause", type=float, default=1.0, help="segundos entre pedidos (subir si Commons responde 429)")
+    parser.add_argument("--more", action="store_true", help="fetch: pedir candidatas nuevas aunque la raza ya tenga")
     parser.add_argument("--dataset", type=Path, default=ROOT / "data" / "dataset")
     parser.add_argument("--out", type=Path, default=ROOT / "data" / "dataset" / "independent_candidates")
     parser.add_argument("--registry", type=Path, default=ROOT / "data" / "splits" / "independent_v1.csv")
