@@ -4,7 +4,6 @@ import heapq
 import json
 import logging
 import threading
-from collections import defaultdict
 from pathlib import Path
 from typing import Callable, Optional
 from uuid import uuid4
@@ -14,6 +13,7 @@ import numpy as np
 
 from lib.models.baseline import BaselineEmbedder
 from lib.schemas import EmbeddingRecord, Neighbor, SearchResult
+from lib.search.voting import predict_breed
 from lib.storage.base import EmbeddingStoreProtocol
 
 logger = logging.getLogger(__name__)
@@ -144,30 +144,13 @@ class SimilarityService:
         Si el mejor score esta por debajo de self.similarity_threshold se
         considera "unknown". Retorna (raza, score).
         """
-        if not results:
-            return "unknown", 0.0
-
-        # Rechazo por similitud con el vecino mas cercano (criterio de identify_face, class_4).
-        best_score = max(n.score for n in results)
-        if best_score < self.similarity_threshold:
-            return "unknown", float(best_score)
-
-        # Voto ponderado por similitud (kNN de Dudani): un vecino mas parecido pesa mas.
-        # Las similitudes negativas no suman votos.
-        weights: dict[str, float] = defaultdict(float)
-        scores: dict[str, list[float]] = defaultdict(list)
-        for neighbor in results:
-            weights[neighbor.breed] += max(neighbor.score, 0.0)
-            scores[neighbor.breed].append(neighbor.score)
-
-        # Desempate: peso total, luego cantidad de votos, luego mejor vecino, luego nombre
-        # (para que el resultado no dependa del orden de entrada).
-        breed = min(
-            scores,
-            key=lambda b: (-weights[b], -len(scores[b]), -max(scores[b]), b),
+        # Rechazo si el mejor vecino queda bajo el umbral (criterio de identify_face, class_4);
+        # si no, voto ponderado por similitud y score = similitud media de la raza ganadora.
+        # La regla vive en lib/search/voting.py para que la notebook mida lo mismo que la app.
+        breed, score = predict_breed(
+            [n.breed for n in results], [n.score for n in results], self.similarity_threshold
         )
-        # Score devuelto: similitud media de los vecinos de la raza ganadora.
-        return breed, float(np.mean(scores[breed]))
+        return breed, float(score)
 
     # ------------------------------------------------------------------
     # Helpers de similitud provistos

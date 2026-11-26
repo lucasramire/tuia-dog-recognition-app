@@ -72,11 +72,17 @@ class BaselineEmbedder:
         logger.info("Baseline ResNet50 (%s) cargada en %s", BASELINE_WEIGHTS, self.device)
 
     @torch.inference_mode()
-    def embed_batch(self, images_bgr: list[np.ndarray]) -> np.ndarray:
-        """Embeddings L2-normalizados de imagenes BGR uint8, forma (N, 2048), float32."""
+    def embed_batch(self, images_bgr: list[np.ndarray], normalize: bool = True) -> np.ndarray:
+        """Embeddings de imagenes BGR uint8, forma (N, 2048), float32.
+
+        Normalizados en L2 por defecto (lo que guarda la app). `normalize=False` devuelve
+        la salida cruda del pooling, solo para comparar metricas en la notebook (D-11).
+        """
         batch = torch.from_numpy(preprocess_batch(images_bgr, self.image_size)).to(self.device)
         features = self.model(batch)
-        return F.normalize(features, p=2, dim=1).cpu().numpy().astype(np.float32)
+        if normalize:
+            features = F.normalize(features, p=2, dim=1)
+        return features.cpu().numpy().astype(np.float32)
 
     def embed(self, image_bgr: np.ndarray) -> list[float]:
         """Embedding L2-normalizado de una imagen BGR uint8, como lista de floats de Python."""
