@@ -67,19 +67,21 @@ class Settings(BaseSettings):
     postgres_user: str = os.getenv("POSTGRES_USER", "dogs_user")
     postgres_password: str = os.getenv("POSTGRES_PASSWORD", "dogs_pass")
 
-    @property
-    def expected_embedding_dim(self) -> int:
-        """Dimension esperada para el modelo elegido en EMBEDDING_MODEL."""
+    def embedding_dim_for(self, model: str) -> int:
+        """Dimension del embedding de un modelo (cada uno tiene su tabla vector(dim) en pgvector)."""
         dims = {
             "baseline": self.baseline_embedding_dim,
             "resnet18_finetuned": self.resnet18_embedding_dim,
             "cnn_custom": self.cnn_custom_embedding_dim,
         }
-        if self.embedding_model not in dims:
-            raise ValueError(
-                f"EMBEDDING_MODEL desconocido: '{self.embedding_model}'. Valores validos: {sorted(dims)}"
-            )
-        return dims[self.embedding_model]
+        if model not in dims:
+            raise ValueError(f"Modelo de embeddings desconocido: '{model}'. Valores validos: {sorted(dims)}")
+        return int(dims[model])
+
+    @property
+    def expected_embedding_dim(self) -> int:
+        """Dimension esperada para el modelo elegido en EMBEDDING_MODEL."""
+        return self.embedding_dim_for(self.embedding_model)
 
     def check_embedding_dim(self) -> None:
         """Falla con un mensaje claro si EMBEDDING_DIM no coincide con el modelo elegido."""

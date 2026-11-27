@@ -27,9 +27,33 @@ class ServiceContainer:
     detection: DetectionService
 
 
-def build_store(settings: Settings) -> StoreType:
+BASELINE_MODEL = "baseline"
+
+
+def store_table_for(model: str) -> str:
+    """Tabla de pgvector de cada modelo de embeddings (mejora opcional 7.3, una tabla por modelo).
+
+    El baseline conserva la tabla original `embeddings`, asi una base ya indexada sigue sirviendo.
+    """
+    return "embeddings" if model == BASELINE_MODEL else f"embeddings_{model}"
+
+
+def store_json_for(settings: Settings, model: str) -> Path:
+    """Archivo JSON de cada modelo cuando USE_PGVECTOR=false (el baseline usa EMBEDDINGS_PATH)."""
+    path = Path(settings.embeddings_path)
+    return path if model == BASELINE_MODEL else path.with_name(f"{path.stem}_{model}{path.suffix}")
+
+
+def build_store(settings: Settings, model: Optional[str] = None) -> StoreType:
+    """Base vectorial de un modelo de embeddings (por defecto, el de EMBEDDING_MODEL).
+
+    Cada modelo tiene su propia tabla (o archivo JSON) con su dimension, asi cambiar de modelo
+    en la Etapa 1 no obliga a reindexar ni borra la base de otro modelo.
+    """
+    model = model or settings.embedding_model
+    dim = settings.embedding_dim_for(model)
     if settings.use_pgvector:
-        logger.info("Using PostgreSQL vector store")
+        logger.info("Using PostgreSQL vector store (modelo %s, tabla %s)", model, store_table_for(model))
         # Import lazy: psycopg/pgvector solo se requieren con USE_PGVECTOR=true
         # (permite usar el resto de los servicios en entornos sin postgres, ej: Colab).
         from lib.storage.pgvector_store import PgVectorEmbeddingStore
@@ -40,10 +64,17 @@ def build_store(settings: Settings) -> StoreType:
             dbname=settings.postgres_db,
             user=settings.postgres_user,
             password=settings.postgres_password,
-            embedding_dim=settings.embedding_dim,
+            embedding_dim=dim,
+            table=store_table_for(model),
         )
-    logger.info("Using JSON file vector store")
-    return EmbeddingStore(settings.embeddings_path)
+    logger.info("Using JSON file vector store (modelo %s)", model)
+    return EmbeddingStore(store_json_for(settings, model))
+
+
+def store_size(store: StoreType) -> int:
+    """Cantidad de embeddings indexados (pgvector cuenta en la base; JSON lee el archivo)."""
+    count = getattr(store, "count", None)
+    return int(count()) if callable(count) else len(store.all())
 
 
 def build_classifier(settings: Settings) -> ClassifierService:
@@ -88,6 +119,9 @@ def build_services(
     settings: Settings,
     url_resolver: Optional[UrlResolver] = None,
 ) -> ServiceContainer:
+    # EMBEDDING_DIM tiene que coincidir con el modelo de EMBEDDING_MODEL: si no, se falla al arrancar
+    # con un mensaje claro, en lugar de al primer insert en pgvector (enunciado, seccion 11).
+    settings.check_embedding_dim()
     store = build_store(settings)
     classifier = build_classifier(settings)
     similarity = build_similarity(settings, store, url_resolver)

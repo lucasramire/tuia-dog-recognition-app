@@ -6,7 +6,11 @@ Si USE_PGVECTOR=true, la base de datos debe estar corriendo
 (`docker compose up postgres -d`).
 
 Uso:
-    python scripts/build_index.py [--split train] [--limit 0]
+    python scripts/build_index.py [--split train] [--limit 0] [--model baseline]
+
+Cada modelo de embeddings tiene su propia base (tabla `embeddings` para el baseline y
+`embeddings_<modelo>` para los otros, o un JSON por modelo): `--model` indexa la del modelo
+indicado (por defecto, EMBEDDING_MODEL) sin tocar las demas.
 
 Dentro de Docker (con `docker compose up -d` corriendo):
     docker compose exec backend python /scripts/build_index.py [--split train]
@@ -40,19 +44,24 @@ def main() -> None:
     parser.add_argument(
         "--limit", type=int, default=0, help="Maximo de imagenes por raza (0 = todas)."
     )
+    parser.add_argument(
+        "--model", choices=["baseline", "resnet18_finetuned", "cnn_custom"], default=None,
+        help="Modelo de embeddings cuya base se indexa (por defecto, EMBEDDING_MODEL del .env).",
+    )
     args = parser.parse_args()
 
     from lib.bootstrap import build_classifier, build_similarity, build_store
     from lib.config import settings
 
-    store = build_store(settings)
+    model = args.model or settings.embedding_model
+    store = build_store(settings, model)
     similarity = build_similarity(settings, store)
 
-    if settings.embedding_model == "baseline":
+    if model == "baseline":
         extractor = similarity.extract_embedding
     else:
         classifier = build_classifier(settings)
-        classifier.set_active_model(settings.embedding_model)
+        classifier.set_active_model(model)
         extractor = classifier.extract_custom_embedding
     similarity.extract_embedding = extractor  # type: ignore[method-assign]
 
@@ -71,13 +80,13 @@ def main() -> None:
             similarity.index_image(
                 str(image_path),
                 breed_dir.name,
-                {"split": args.split, "model": settings.embedding_model},
+                {"split": args.split, "model": model},
             )
             count += 1
             total += 1
         print(f"{breed_dir.name}: {count} imagenes indexadas")
 
-    print(f"Total: {total} embeddings almacenados (modelo: {settings.embedding_model})")
+    print(f"Total: {total} embeddings almacenados (modelo: {model})")
 
 
 if __name__ == "__main__":
