@@ -102,6 +102,9 @@ def test_detection_counts() -> None:
     confs, ms = detect_confidences(yolo, [image] * 3, imgsz=320)
     assert yolo.calls[0]["imgsz"] == 320 and yolo.calls[0]["classes"] == [16]
     assert [len(c) for c in confs] == [2, 1, 0] and ms >= 0
+    auto = _FakeYolo([None, None])
+    detect_confidences(auto, [image, np.zeros((900, 1200, 3), np.uint8)], imgsz=None)
+    assert [c["imgsz"] for c in auto.calls] == [320, 640]  # regla adaptativa de la app
     table = count_table(confs, n_dogs=[2, 0, 1], groups=["varios", "sin perros", "uno"], thresholds=[0.25, 0.5])
     assert table.loc[(0.25, "varios"), "exact_count"] == 1.0
     assert table.loc[(0.5, "varios"), "count_mae"] == 1.0

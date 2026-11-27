@@ -28,7 +28,7 @@ DOG_CLASS_ID = 16  # COCO
 def detect_confidences(
     yolo: object,
     images_bgr: Sequence[np.ndarray],
-    imgsz: int = 640,
+    imgsz: int | None = 640,
     conf_floor: float = 0.05,
     iou: float = 0.7,
     dog_class_id: int = DOG_CLASS_ID,
@@ -36,15 +36,19 @@ def detect_confidences(
 ) -> tuple[list[np.ndarray], float]:
     """Confianzas de los perros detectados por imagen y la latencia mediana en ms por imagen.
 
-    `device="cpu"` mide la latencia donde corre la app; la primera imagen incluye la carga
-    del modelo, por eso se informa la mediana.
+    `imgsz=None` usa la regla adaptativa de la app (`adaptive_imgsz`). `device="cpu"` mide la
+    latencia donde corre la app; la primera imagen incluye la carga del modelo, por eso se
+    informa la mediana.
     """
+    from lib.services.detection_service import adaptive_imgsz
+
     confidences, times = [], []
     extra = {} if device is None else {"device": device}
     for image in images_bgr:
+        size = adaptive_imgsz(*image.shape[:2]) if imgsz is None else imgsz
         start = time.perf_counter()
         result = yolo.predict(
-            image, conf=conf_floor, iou=iou, classes=[dog_class_id], imgsz=imgsz, verbose=False, **extra
+            image, conf=conf_floor, iou=iou, classes=[dog_class_id], imgsz=size, verbose=False, **extra
         )[0]
         times.append((time.perf_counter() - start) * 1000.0)
         boxes = result.boxes

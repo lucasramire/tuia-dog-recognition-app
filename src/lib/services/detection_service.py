@@ -20,6 +20,20 @@ logger = logging.getLogger(__name__)
 
 UNKNOWN_BREED = "unknown"
 
+# Tamano de entrada de YOLO adaptativo (E3.2): YOLO escala la imagen para que su lado mayor mida
+# `imgsz`. Agrandar una imagen chica (224 px a 640) deja al perro gigante y borroso, a una escala
+# que la red casi no vio en COCO, y deja de detectarlo; achicar una foto grande a 320 pierde los
+# perros lejanos. Por eso se usa el lado mayor real, sin agrandar por debajo de 320 ni pasar de 640.
+YOLO_IMGSZ_MIN = 320
+YOLO_IMGSZ_MAX = 640
+YOLO_STRIDE = 32  # YOLO necesita lados multiplos del stride maximo de la red
+
+
+def adaptive_imgsz(height: int, width: int, low: int = YOLO_IMGSZ_MIN, high: int = YOLO_IMGSZ_MAX) -> int:
+    """Lado mayor de la imagen redondeado hacia arriba a multiplo de 32 y limitado a [low, high]."""
+    side = -(-max(int(height), int(width)) // YOLO_STRIDE) * YOLO_STRIDE
+    return int(min(max(side, low), high))
+
 
 def _softmax(logits: np.ndarray) -> np.ndarray:
     shifted = logits - logits.max(axis=-1, keepdims=True)
@@ -60,7 +74,8 @@ class DetectionService:
             min_confidence = settings.classifier_min_confidence if min_confidence is None else min_confidence
         self.iou_threshold = float(iou_threshold)
         self.min_confidence = float(min_confidence)
-        # Lado mayor al que YOLO redimensiona la imagen; None = valor por defecto de ultralytics (640).
+        # Lado mayor al que YOLO redimensiona la imagen. None = adaptativo por imagen (adaptive_imgsz);
+        # un entero lo fija (por ejemplo 640, el valor por defecto de ultralytics).
         if imgsz is not None and int(imgsz) <= 0:
             raise ValueError(f"imgsz debe ser positivo, llego {imgsz}")
         self.imgsz = None if imgsz is None else int(imgsz)
@@ -121,14 +136,14 @@ class DetectionService:
         height, width = image.shape[:2]
 
         # ultralytics interpreta los np.ndarray como BGR, igual que OpenCV.
-        extra = {} if self.imgsz is None else {"imgsz": self.imgsz}
+        imgsz = self.imgsz if self.imgsz is not None else adaptive_imgsz(height, width)
         results = self._get_yolo().predict(
             image,
             conf=self.conf_threshold,
             iou=self.iou_threshold,
             classes=[self.dog_class_id],
+            imgsz=imgsz,
             verbose=False,
-            **extra,
         )
         detections: list[tuple[tuple[int, int, int, int], float]] = []
         for result in results:
