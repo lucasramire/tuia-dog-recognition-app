@@ -17,6 +17,12 @@ Flujo (desde la raiz del repo):
 Nada se acepta sin revision: la raza y las personas las confirma quien revisa. Las fotos
 con una persona no reconocible se registran con people=none; corregir a mano a
 `not_identifiable` en el CSV si corresponde.
+
+Con `--set negatives` el mismo flujo junta imagenes SIN perro para calibrar el umbral de
+"unknown" de la Etapa 1 (D-30): grupos de `NEGATIVE_CATEGORIES` (gatos, otros animales,
+interiores, calles), candidatas en data/dataset/calibration_candidates/, aceptadas en
+data/dataset/calibration_negatives/<grupo>/ y registro en data/splits/calibration_negatives_v1.csv.
+En la revision se borra cualquier imagen con un perro o con caras.
 """
 
 from __future__ import annotations
@@ -36,7 +42,7 @@ sys.path.insert(0, str(ROOT / "src"))
 import pandas as pd  # noqa: E402
 
 from lib.dataset.independent import COLUMNS, INDEPENDENT_DIR, load_registry, next_numbers, slug  # noqa: E402
-from lib.dataset.wikimedia import COMMONS_CATEGORIES, CommonsClient, pick_diverse  # noqa: E402
+from lib.dataset.wikimedia import COMMONS_CATEGORIES, NEGATIVE_CATEGORIES, CommonsClient, pick_diverse  # noqa: E402
 
 logging.basicConfig(level=logging.INFO, format="%(message)s")
 logger = logging.getLogger("collect_independent")
@@ -53,22 +59,34 @@ COLLECTOR_BREEDS = {
     ],
 }
 CANDIDATE_COLUMNS = ["file", "breed", "url", "author", "license", "license_url", "retrieved", "width", "height"]
+# Que cambia entre el conjunto independiente y los negativos de calibracion.
+SETS = {
+    "independent": {"categories": COMMONS_CATEGORIES, "candidates": "independent_candidates",
+                    "target": INDEPENDENT_DIR, "registry": "independent_v1.csv"},
+    "negatives": {"categories": NEGATIVE_CATEGORIES, "candidates": "calibration_candidates",
+                  "target": "calibration_negatives", "registry": "calibration_negatives_v1.csv"},
+}
+
+
+def categories(args: argparse.Namespace) -> dict[str, str]:
+    return SETS[args.set]["categories"]
 
 
 def resolve_breeds(args: argparse.Namespace) -> list[str]:
-    breeds = args.breeds or COLLECTOR_BREEDS[args.collector]
-    unknown = [b for b in breeds if b not in COMMONS_CATEGORIES]
+    default = COLLECTOR_BREEDS[args.collector] if args.set == "independent" else list(NEGATIVE_CATEGORIES)
+    breeds = args.breeds or default
+    unknown = [b for b in breeds if b not in categories(args)]
     if unknown:
-        raise SystemExit(f"Razas sin categoria de Commons configurada: {unknown}")
+        raise SystemExit(f"Sin categoria de Commons configurada: {unknown}")
     return breeds
 
 
 def cmd_check(args: argparse.Namespace) -> int:
     breeds = resolve_breeds(args)
-    infos = CommonsClient().category_info([COMMONS_CATEGORIES[b] for b in breeds])
+    infos = CommonsClient().category_info([categories(args)[b] for b in breeds])
     problems = 0
     for breed in breeds:
-        category = COMMONS_CATEGORIES[breed]
+        category = categories(args)[breed]
         info = infos[category]
         if not info["exists"]:
             status = "NO EXISTE"
@@ -105,7 +123,7 @@ def cmd_fetch(args: argparse.Namespace) -> int:
         if (table["breed"] == breed).any() and not args.more:
             logger.info("%s: ya tiene candidatas en %s, se saltea (usar --more para pedir mas)", breed, candidates_csv)
             continue
-        found = client.candidates(breed, COMMONS_CATEGORIES[breed], min_side=args.min_side)
+        found = client.candidates(breed, categories(args)[breed], min_side=args.min_side)
         # Fuera todo lo ya visto: registrado, aceptado, borrado en la revision o rechazado.
         fresh = [c for c in found if c.page_url not in known_urls]
         chosen = pick_diverse(fresh, args.per_breed, args.max_per_author, args.seed)
@@ -144,7 +162,10 @@ def cmd_accept(args: argparse.Namespace) -> int:
     if not candidates_csv.exists():
         raise SystemExit(f"No existe {candidates_csv}: correr `fetch` primero")
     candidates = pd.read_csv(candidates_csv, dtype=str, keep_default_na=False)
+    if not args.registry.exists():
+        pd.DataFrame(columns=COLUMNS).to_csv(args.registry, index=False, encoding="utf-8")
     registry = load_registry(args.registry)
+    negatives = args.set == "negatives"
     breeds = set(resolve_breeds(args))
 
     kept = candidates[candidates["breed"].isin(breeds) & candidates["file"].map(lambda f: (out / f).exists())]
@@ -155,7 +176,7 @@ def cmd_accept(args: argparse.Namespace) -> int:
 
     new_rows = []
     for breed, group in kept.groupby("breed", sort=True):
-        folder = args.dataset / INDEPENDENT_DIR / breed
+        folder = args.dataset / SETS[args.set]["target"] / breed
         numbers = next_numbers(folder, slug(breed), args.collector, len(group))
         for number, (_, row) in zip(numbers, group.iterrows()):
             source = out / row["file"]
@@ -163,10 +184,12 @@ def cmd_accept(args: argparse.Namespace) -> int:
             folder.mkdir(parents=True, exist_ok=True)
             shutil.move(str(source), target)
             new_rows.append({
-                "path": target.relative_to(args.dataset).as_posix(), "breed": breed, "scene": "single",
-                "n_dogs": "1", "breeds_in_scene": "", "source": "wikimedia", "url": row["url"],
+                "path": target.relative_to(args.dataset).as_posix(),
+                "breed": "none" if negatives else breed, "scene": "no_dog" if negatives else "single",
+                "n_dogs": "0" if negatives else "1", "breeds_in_scene": "", "source": "wikimedia", "url": row["url"],
                 "author": row["author"], "license": row["license"], "license_url": row["license_url"],
-                "retrieved": row["retrieved"], "collector": args.collector, "people": "none", "notes": "",
+                "retrieved": row["retrieved"], "collector": args.collector, "people": "none",
+                "notes": breed if negatives else "",
             })
         logger.info("%s: %d aceptadas", breed, len(group))
 
@@ -189,10 +212,14 @@ def main() -> int:
     parser.add_argument("--seed", type=int, default=42)
     parser.add_argument("--pause", type=float, default=1.0, help="segundos entre pedidos (subir si Commons responde 429)")
     parser.add_argument("--more", action="store_true", help="fetch: pedir candidatas nuevas aunque la raza ya tenga")
+    parser.add_argument("--set", choices=sorted(SETS), default="independent",
+                        help="independent: conjunto independiente; negatives: imagenes sin perro para calibrar (D-30)")
     parser.add_argument("--dataset", type=Path, default=ROOT / "data" / "dataset")
-    parser.add_argument("--out", type=Path, default=ROOT / "data" / "dataset" / "independent_candidates")
-    parser.add_argument("--registry", type=Path, default=ROOT / "data" / "splits" / "independent_v1.csv")
+    parser.add_argument("--out", type=Path, default=None, help="por defecto, la carpeta de candidatas del conjunto")
+    parser.add_argument("--registry", type=Path, default=None, help="por defecto, el CSV del conjunto en data/splits/")
     args = parser.parse_args()
+    args.out = args.out or args.dataset / SETS[args.set]["candidates"]
+    args.registry = args.registry or ROOT / "data" / "splits" / SETS[args.set]["registry"]
     return {"check": cmd_check, "fetch": cmd_fetch, "accept": cmd_accept}[args.command](args)
 
 

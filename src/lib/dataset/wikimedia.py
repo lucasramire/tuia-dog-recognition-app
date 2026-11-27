@@ -63,6 +63,25 @@ COMMONS_CATEGORIES: dict[str, str] = {
     "Yorkie": "Yorkshire Terrier",
 }
 
+# Negativos para calibrar el umbral de "unknown" de la Etapa 1 (D-30): imagenes sin perro.
+# Grupo -> categoria de Commons. Sin Coyote, Dingo, Dhole ni African Wild Dog: son clases del
+# dataset. Lobo: la subespecie euroasiatica, porque "Canis lupus" incluye al perro domestico.
+NEGATIVE_CATEGORIES: dict[str, str] = {
+    "cat": "Felis silvestris catus",
+    "fox": "Vulpes vulpes",
+    "wolf": "Canis lupus lupus",
+    "bear": "Ursus arctos",
+    "sheep": "Ovis aries",
+    "horse": "Horses",
+    "cattle": "Bos taurus",
+    "rabbit": "Oryctolagus cuniculus",
+    "living_room": "Living rooms",
+    "kitchen": "Kitchens",
+    "bedroom": "Bedrooms",
+    "empty_street": "Empty streets",
+    "garden": "Gardens",
+}
+
 _ACCEPTED_LICENSE = re.compile(r"^(public domain|pd\b.*|cc0.*|cc[ -]by( |-)\d.*|cc[ -]by-sa( |-)\d.*)$", re.IGNORECASE)
 _REJECTED_LICENSE = re.compile(r"\b(nc|nd)\b|non-?commercial|no ?deriv|fair use", re.IGNORECASE)
 _SKIP_SUBCATEGORY = re.compile(
