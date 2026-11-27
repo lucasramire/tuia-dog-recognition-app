@@ -347,7 +347,7 @@ Las dos se entregan ejecutadas y con las salidas en el repositorio.
 - **Modelo B** (`cnn_custom`, 1,06 M parámetros, desde cero): 5 bloques conv 3x3 + BatchNorm + ReLU + max-pool con 32, 64, 128, 256 y 256 canales, global average pooling, embedding de 256 con ReLU, dropout 0,3 y clasificador de 70. Inicialización de Kaiming, LR 1e-3. Variantes a 30 épocas en `valid`: base 0,557, estadísticas de `train` 0,553, sin BatchNorm 0,544, dropout 0,5 0,477, augmentation fuerte 0,457. Ninguna había convergido y ninguna sobreajustaba, así que más regularización empeoraba. El modelo final es la base con un tope de 60 épocas: 0,716 en `valid` (mejor época 54).
 - **YOLO**: YOLOv8n con `imgsz` adaptativo (320 a 640), confianza 0,25 e IoU 0,7. Se comparó con `imgsz` fijo de 320, 640 y 1280 y con YOLO11n (ver [Resultados](#resultados)). YOLO11n detecta algo más en las fotos reales (0,95 contra 0,90, 6 de 118 imágenes) y algo menos en `test`, con latencia parecida; se mantuvo v8n, el modelo por defecto del enunciado, porque la diferencia es chica. `YOLO_CONF_THRESHOLD` se probó con 0,15, 0,25 y 0,40: cambian 1 o 2 imágenes por grupo, así que se mantuvo 0,25.
 - **`CLASSIFIER_MIN_CONFIDENCE=0.30`**: calibrado con la curva riesgo-cobertura del Modelo A en `valid`, como el menor umbral cuya accuracy sobre lo aceptado llega a 0,95. En `test` responde el 96,1 % de las imágenes con 94,8 % de acierto y rechaza el 34 % de los errores. Para el Modelo B el mismo criterio da 0,654 y solo respondería el 31 %: el valor de la app está pensado para el A.
-- **Checkpoints** (colocarlos en `models/`): [resnet18_finetuned.pth](PENDIENTE_LINK_A) (43 MB) y [cnn_custom.pth](PENDIENTE_LINK_B) (4 MB). Links públicos de solo lectura.
+- **Checkpoints** (colocarlos en `models/`): [resnet18_finetuned.pth](https://drive.google.com/file/d/103Ze7L58gVNONt5wnHSaHGtY6HdyfTJ0/view?usp=sharing) (43 MB) y [cnn_custom.pth](https://drive.google.com/file/d/1-8W8WxsGniPAzOVRwB6vNj78IYNojocx/view?usp=sharing) (4 MB). Links públicos de solo lectura; la carpeta completa con historiales y experimentos está en [tp2-perros](https://drive.google.com/drive/folders/1yvZ2wy2G7-LhRfiFhQs7YSZCd76mtNQO?usp=sharing).
 
 ## Resultados
 
@@ -378,11 +378,11 @@ Las dos se entregan ejecutadas y con las salidas en el repositorio.
 
 | Modelo | accuracy | IC 95 % | precision | recall | F1 | Parámetros | ms CPU por imagen |
 |---|---|---|---|---|---|---|---|
-| A (ResNet18 finetune + pesos de clase) | **0,924** | [0,904; 0,943] | 0,933 | 0,924 | **0,923** | 11,2 M | 39,8 (23,7 en ONNX) |
-| B (CNN propia) | 0,703 | [0,670; 0,739] | 0,721 | 0,703 | 0,698 | 1,06 M | 26,6 (12,1 en ONNX) |
+| A (ResNet18 finetune + pesos de clase) | **0,924** | [0,904; 0,943] | 0,933 | 0,924 | **0,923** | 11,2 M | 80,0 (36,2 en ONNX) |
+| B (CNN propia) | 0,703 | [0,670; 0,739] | 0,721 | 0,703 | 0,698 | 1,06 M | 39,5 (16,1 en ONNX) |
 
 - La diferencia es clara: 175 imágenes que solo acierta A contra 20 que solo acierta B (McNemar, p = 4e-32). **La app clasifica con el Modelo A.**
-- El B tiene 10 veces menos parámetros pero es solo 1,5 veces más rápido: aplica sus primeras convoluciones a 224 px y hace unas 0,85 GMAC por imagen, contra 1,8 de la ResNet18. Las latencias son de un Intel de 4 hilos.
+- El B tiene 10 veces menos parámetros pero es solo 2 veces más rápido: aplica sus primeras convoluciones a 224 px y hace unas 0,85 GMAC por imagen, contra 1,8 de la ResNet18. Latencias medidas en la CPU de Colab con un hilo de PyTorch (en una CPU local de 4 hilos: 39,8 y 26,6 ms).
 - Errores del A: casi todos entre razas parecidas, los mismos pares que el EDA encontró con el baseline (Boston Terrier y Bulldog, Cockapoo y Labradoodle, Lhasa y Shih-Tzu, Pastor Alemán y Malinois). La raza con peor F1 es Bulldog (0,40), y parte de esos errores parecen de etiqueta (Boston Terriers dentro de la carpeta Bulldog). 18 de los 53 errores tienen probabilidad de 0,5 o más: ningún umbral razonable los filtra.
 - Errores del B: más repartidos, con confusiones entre razas que no se parecen (Cairn y Yorkie, Basenji y Corgi). Peores razas: Cocker, Chihuahua, Greyhound y Basenji, que el A resuelve con F1 de 0,86 o más.
 - Grad-CAM: los dos modelos miran al perro, no al fondo. El A se concentra en la cabeza; el B es más difuso.
