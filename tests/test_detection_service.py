@@ -87,6 +87,28 @@ def test_detect_dogs_ints_clipped_sorted_and_filtered(tmp_path: Path) -> None:
     assert fake.calls[0]["classes"] == [16]
 
 
+def test_adaptive_imgsz() -> None:
+    from lib.services.detection_service import adaptive_imgsz
+
+    assert adaptive_imgsz(224, 224) == 320  # no agranda por debajo de 320
+    assert adaptive_imgsz(300, 450) == 480  # lado mayor redondeado a multiplo de 32
+    assert adaptive_imgsz(480, 448) == 480
+    assert adaptive_imgsz(3000, 4000) == 640  # no pasa de 640
+
+
+def test_detect_dogs_imgsz(tmp_path: Path) -> None:
+    service = _service(tmp_path)
+    service._yolo = _FakeYolo(xyxy=[], conf=[], cls=[])
+    service.detect_dogs(_image(100, 200))
+    service.detect_dogs(_image(900, 1200))
+    assert [c["imgsz"] for c in service._yolo.calls] == [320, 640]  # adaptativo por defecto
+    service.imgsz = 1280
+    service.detect_dogs(_image())
+    assert service._yolo.calls[2]["imgsz"] == 1280  # fijo si se pasa un entero
+    with pytest.raises(ValueError):
+        DetectionService(service.classifier, "x.pt", 0.25, 16, 0.5, 0.0, imgsz=0)
+
+
 def test_detect_dogs_empty(tmp_path: Path) -> None:
     service = _service(tmp_path)
     service._yolo = _FakeYolo(xyxy=[], conf=[], cls=[])

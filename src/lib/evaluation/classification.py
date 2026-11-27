@@ -105,6 +105,70 @@ def mcnemar_test(correct_a: np.ndarray, correct_b: np.ndarray) -> dict[str, floa
     return {"only_a": b, "only_b": c, "p_value": float(min(1.0, 2 * tail))}
 
 
+def risk_coverage(probs: np.ndarray, y_true: np.ndarray) -> "pd.DataFrame":
+    """Curva de clasificacion selectiva (D-27): un umbral por cada confianza observada.
+
+    Para cada umbral t se aceptan las predicciones con probabilidad maxima >= t. `coverage` es la
+    proporcion aceptada y `accuracy` la accuracy de lo aceptado. Ordenada de menor a mayor umbral.
+    """
+    import pandas as pd
+
+    probs = np.asarray(probs, dtype=np.float64)
+    y_true = np.asarray(y_true, dtype=int)
+    if probs.ndim != 2 or probs.shape[0] != y_true.shape[0] or y_true.size == 0:
+        raise ValueError(f"probs {probs.shape} e y_true {y_true.shape} no son compatibles")
+    confidence = probs.max(axis=1)
+    correct = probs.argmax(axis=1) == y_true
+    order = np.argsort(-confidence, kind="stable")
+    conf_sorted, correct_sorted = confidence[order], correct[order]
+    accepted = np.arange(1, len(order) + 1)
+    hits = np.cumsum(correct_sorted)
+    # Con empates de confianza solo vale el ultimo indice de cada valor (se aceptan todos juntos).
+    last = np.r_[conf_sorted[1:] != conf_sorted[:-1], True]
+    table = pd.DataFrame(
+        {
+            "threshold": conf_sorted[last],
+            "coverage": accepted[last] / len(order),
+            "accuracy": hits[last] / accepted[last],
+            "accepted": accepted[last],
+        }
+    )
+    return table.iloc[::-1].reset_index(drop=True)
+
+
+def confidence_threshold(probs: np.ndarray, y_true: np.ndarray, target_accuracy: float = 0.95) -> dict[str, float]:
+    """Menor umbral cuya accuracy aceptada alcanza `target_accuracy` (criterio de D-27).
+
+    El menor umbral es el que mas cobertura conserva. Si ya sin umbral se cumple el objetivo,
+    devuelve 0 (no hace falta rechazar nada).
+    """
+    if not 0.0 < target_accuracy <= 1.0:
+        raise ValueError(f"target_accuracy debe estar en (0, 1], llego {target_accuracy}")
+    curve = risk_coverage(probs, y_true)
+    full = curve.iloc[0]
+    if full["accuracy"] >= target_accuracy:
+        return {"threshold": 0.0, "coverage": 1.0, "accuracy": float(full["accuracy"])}
+    ok = curve[curve["accuracy"] >= target_accuracy]
+    if ok.empty:
+        raise ValueError(f"Ningun umbral alcanza accuracy {target_accuracy}")
+    best = ok.iloc[0]
+    return {"threshold": float(best["threshold"]), "coverage": float(best["coverage"]), "accuracy": float(best["accuracy"])}
+
+
+def apply_confidence_threshold(probs: np.ndarray, y_true: np.ndarray, threshold: float) -> dict[str, float]:
+    """Cobertura y accuracy de lo aceptado con un umbral fijo (para medir en `test` el umbral de `valid`)."""
+    probs = np.asarray(probs, dtype=np.float64)
+    y_true = np.asarray(y_true, dtype=int)
+    accepted = probs.max(axis=1) >= threshold
+    correct = probs.argmax(axis=1) == y_true
+    return {
+        "threshold": float(threshold),
+        "coverage": float(accepted.mean()),
+        "accuracy": float(correct[accepted].mean()) if accepted.any() else float("nan"),
+        "errors_rejected": float((~correct & ~accepted).sum() / max((~correct).sum(), 1)),
+    }
+
+
 def bootstrap_ci(
     values: np.ndarray, n_resamples: int = 2000, alpha: float = 0.05, seed: int = 42
 ) -> tuple[float, float, float]:
