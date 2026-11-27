@@ -54,24 +54,50 @@ def upload_numpy_image(image: np.ndarray | None) -> str:
     return str(body["path"])
 
 
+_BOX_COLOR = (80, 220, 80)  # BGR
+_LABEL_TEXT_COLOR = (20, 20, 20)
+_DRAW_REFERENCE_SIDE = 640  # con este lado mayor, linea de 2 px y letra de 0.55
+
+
 def draw_detections_on_bgr(image_bgr: np.ndarray, result: dict[str, Any]) -> np.ndarray:
-    """Dibuja bounding boxes, raza predicha y scores; retorna RGB para gradio."""
+    """Dibuja bounding boxes, raza predicha y scores; retorna RGB para gradio.
+
+    El grosor de la linea y el tamano de la letra escalan con la imagen: la interfaz la muestra
+    achicada, y en una foto de 5000 px una linea fija de 2 px deja de verse.
+    """
     vis = image_bgr.copy()
-    for det in result.get("detections", []):
+    height, width = vis.shape[:2]
+    factor = max(1.0, max(height, width) / _DRAW_REFERENCE_SIDE)
+    thickness = max(2, round(2 * factor))
+    font_scale = 0.55 * factor
+    font_thickness = max(1, round(1.5 * factor))
+    detections = result.get("detections", [])
+    # Primero todas las cajas y despues las etiquetas, para que una caja no tape la etiqueta de otra.
+    for det in detections:
         x1, y1, x2, y2 = (int(v) for v in det["bbox"])
+        cv2.rectangle(vis, (x1, y1), (x2, y2), _BOX_COLOR, thickness)
+    for det in detections:
+        x1, y1 = (int(v) for v in det["bbox"][:2])
         breed = det.get("breed", "?")
-        det_score = det.get("det_score", 0.0)
-        breed_score = det.get("breed_score", 0.0)
-        cv2.rectangle(vis, (x1, y1), (x2, y2), (80, 220, 80), 2)
-        txt = f"{breed} det:{det_score} cls:{breed_score}"
+        det_score = float(det.get("det_score", 0.0) or 0.0)
+        breed_score = float(det.get("breed_score", 0.0) or 0.0)
+        txt = f"{breed} det:{det_score:.2f} cls:{breed_score:.2f}"
+        (tw, th), baseline = cv2.getTextSize(txt, cv2.FONT_HERSHEY_SIMPLEX, font_scale, font_thickness)
+        pad = max(2, thickness)
+        # Etiqueta sobre fondo del color de la caja; si no entra arriba, va adentro de la caja.
+        top = y1 - th - baseline - 2 * pad
+        if top < 0:
+            top = y1
+        cv2.rectangle(vis, (x1, top), (x1 + tw + 2 * pad, top + th + baseline + 2 * pad), _BOX_COLOR, -1)
         cv2.putText(
             vis,
             txt,
-            (x1, max(0, y1 - 8)),
+            (x1 + pad, top + pad + th),
             cv2.FONT_HERSHEY_SIMPLEX,
-            0.55,
-            (80, 220, 80),
-            2,
+            font_scale,
+            _LABEL_TEXT_COLOR,
+            font_thickness,
+            cv2.LINE_AA,
         )
     return cv2.cvtColor(vis, cv2.COLOR_BGR2RGB)
 
