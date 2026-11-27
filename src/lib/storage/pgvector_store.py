@@ -2,17 +2,33 @@ from __future__ import annotations
 
 import json
 import logging
+import re
 
 from pgvector.psycopg import register_vector
-from psycopg import connect
+from psycopg import connect, sql
 
 from lib.schemas import EmbeddingRecord
 
 logger = logging.getLogger(__name__)
 
+DEFAULT_TABLE = "embeddings"
+_TABLE_NAME = re.compile(r"^[a-z_][a-z0-9_]{0,62}$")
+
+
+def validate_table_name(table: str) -> str:
+    """Nombre de tabla en minusculas, sin comillas ni espacios (se usa como identificador SQL)."""
+    if not _TABLE_NAME.match(table):
+        raise ValueError(f"Nombre de tabla invalido para pgvector: '{table}'")
+    return table
+
 
 class PgVectorEmbeddingStore:
-    """Base vectorial sobre PostgreSQL + pgvector (provista por la catedra)."""
+    """Base vectorial sobre PostgreSQL + pgvector (provista por la catedra).
+
+    `table` permite una tabla por modelo de embeddings (mejora opcional 7.3): cada modelo tiene
+    su dimension y una columna vector(dim) no acepta otra, asi que el selector de modelo de la
+    Etapa 1 funciona sin reindexar. Por defecto, la tabla original `embeddings`.
+    """
 
     def __init__(
         self,
@@ -22,8 +38,10 @@ class PgVectorEmbeddingStore:
         user: str,
         password: str,
         embedding_dim: int = 512,
+        table: str = DEFAULT_TABLE,
     ) -> None:
         self.embedding_dim = embedding_dim
+        self.table = validate_table_name(table)
         self.conn = connect(
             host=host,
             port=port,
@@ -47,30 +65,34 @@ class PgVectorEmbeddingStore:
                 JOIN pg_class c ON a.attrelid = c.oid
                 JOIN pg_namespace n ON c.relnamespace = n.oid
                 WHERE n.nspname = 'public'
-                  AND c.relname = 'embeddings'
+                  AND c.relname = %s
                   AND a.attname = 'embedding'
                   AND a.attnum > 0
                   AND NOT a.attisdropped
-                """
+                """,
+                (self.table,),
             )
             row = cur.fetchone()
             if row is not None and row[0] != expected_type:
                 logger.warning(
-                    "embeddings.embedding is %s but %s is required; dropping table (data removed)",
+                    "%s.embedding is %s but %s is required; dropping table (data removed)",
+                    self.table,
                     row[0],
                     expected_type,
                 )
-                cur.execute("DROP TABLE embeddings")
+                cur.execute(sql.SQL("DROP TABLE {}").format(sql.Identifier(self.table)))
             cur.execute(
-                f"""
-                CREATE TABLE IF NOT EXISTS embeddings (
-                    id_imagen TEXT PRIMARY KEY,
-                    embedding vector({self.embedding_dim}) NOT NULL,
-                    path TEXT NOT NULL,
-                    breed TEXT NOT NULL,
-                    metadata JSONB NOT NULL DEFAULT '{{}}'::jsonb
-                )
-                """
+                sql.SQL(
+                    """
+                    CREATE TABLE IF NOT EXISTS {} (
+                        id_imagen TEXT PRIMARY KEY,
+                        embedding vector({}) NOT NULL,
+                        path TEXT NOT NULL,
+                        breed TEXT NOT NULL,
+                        metadata JSONB NOT NULL DEFAULT '{{}}'::jsonb
+                    )
+                    """
+                ).format(sql.Identifier(self.table), sql.Literal(int(self.embedding_dim)))
             )
 
     @staticmethod
@@ -86,22 +108,29 @@ class PgVectorEmbeddingStore:
     def all(self) -> list[EmbeddingRecord]:
         with self.conn.cursor() as cur:
             cur.execute(
-                """
-                SELECT id_imagen, embedding, path, breed, metadata
-                FROM embeddings
-                """
+                sql.SQL("SELECT id_imagen, embedding, path, breed, metadata FROM {}").format(
+                    sql.Identifier(self.table)
+                )
             )
             rows = cur.fetchall()
         return [self._row_to_record(row) for row in rows]
 
+    def count(self) -> int:
+        """Cantidad de embeddings indexados (sin traerlos a Python)."""
+        with self.conn.cursor() as cur:
+            cur.execute(sql.SQL("SELECT count(*) FROM {}").format(sql.Identifier(self.table)))
+            return int(cur.fetchone()[0])
+
     def append(self, record: EmbeddingRecord) -> None:
         with self.conn.cursor() as cur:
             cur.execute(
-                """
-                INSERT INTO embeddings (id_imagen, embedding, path, breed, metadata)
-                VALUES (%s, %s, %s, %s, %s)
-                ON CONFLICT (id_imagen) DO NOTHING
-                """,
+                sql.SQL(
+                    """
+                    INSERT INTO {} (id_imagen, embedding, path, breed, metadata)
+                    VALUES (%s, %s, %s, %s, %s)
+                    ON CONFLICT (id_imagen) DO NOTHING
+                    """
+                ).format(sql.Identifier(self.table)),
                 (
                     record.id_imagen,
                     record.embedding,
@@ -115,12 +144,14 @@ class PgVectorEmbeddingStore:
         """Top-k vecinos por distancia coseno (operador <=> de pgvector)."""
         with self.conn.cursor() as cur:
             cur.execute(
-                """
-                SELECT id_imagen, embedding, path, breed, metadata
-                FROM embeddings
-                ORDER BY embedding <=> %s::vector
-                LIMIT %s
-                """,
+                sql.SQL(
+                    """
+                    SELECT id_imagen, embedding, path, breed, metadata
+                    FROM {}
+                    ORDER BY embedding <=> %s::vector
+                    LIMIT %s
+                    """
+                ).format(sql.Identifier(self.table)),
                 (query, k),
             )
             rows = cur.fetchall()

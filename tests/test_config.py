@@ -10,9 +10,13 @@ def _settings(**kwargs) -> Settings:
 
 
 def test_new_variables_have_defaults() -> None:
+    # config.py carga src/.env al importarse y los defaults de Settings salen de esas variables:
+    # se compara contra el entorno (si la variable no esta, el default del codigo).
+    import os
+
     s = _settings()
-    assert s.yolo_iou_threshold == 0.7
-    assert s.classifier_min_confidence == 0.0
+    assert s.yolo_iou_threshold == float(os.getenv("YOLO_IOU_THRESHOLD", 0.7))
+    assert s.classifier_min_confidence == float(os.getenv("CLASSIFIER_MIN_CONFIDENCE", 0.0))
     assert (s.baseline_embedding_dim, s.resnet18_embedding_dim, s.cnn_custom_embedding_dim) == (2048, 512, 256)
 
 

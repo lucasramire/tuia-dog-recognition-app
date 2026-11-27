@@ -3,6 +3,7 @@ from __future__ import annotations
 import asyncio
 import json
 import mimetypes
+import threading
 from pathlib import Path
 from uuid import uuid4
 
@@ -10,7 +11,7 @@ import numpy as np
 from fastapi import APIRouter, File, HTTPException, Response, UploadFile, status
 from fastapi.responses import FileResponse
 
-from lib.bootstrap import build_services
+from lib.bootstrap import build_services, build_similarity, build_store, store_size
 from lib.config import settings
 from lib.files import file_to_public_url, safe_file_under
 from lib.schemas import (
@@ -47,6 +48,28 @@ detection_service = services.detection
 
 EMBEDDING_MODELS = ("baseline", "resnet18_finetuned", "cnn_custom")
 CLASSIFIER_MODELS = ("resnet18_finetuned", "cnn_custom")
+
+
+# Una base por modelo (mejora opcional 7.3): el selector de la Etapa 1 busca en la base del modelo
+# elegido, sin reindexar. La del modelo de EMBEDDING_MODEL ya esta en `services`; las otras se
+# crean la primera vez que se piden y se reutilizan.
+_similarity_by_model = {settings.embedding_model: similarity_service}
+_similarity_lock = threading.Lock()
+
+
+def _similarity_for(model_name: str):
+    with _similarity_lock:
+        if model_name not in _similarity_by_model:
+            _similarity_by_model[model_name] = build_similarity(
+                settings, build_store(settings, model_name), url_resolver=_public_url
+            )
+        service = _similarity_by_model[model_name]
+    if store_size(service.store) == 0:
+        raise RuntimeError(
+            f"La base de '{model_name}' no tiene imagenes indexadas. Indexarla con "
+            f"`python scripts/build_index.py --split train --model {model_name}`."
+        )
+    return service
 
 
 def _embedding_extractor(model_name: str):
@@ -140,7 +163,7 @@ async def search(payload: SearchRequest, response: Response) -> AsyncTaskCreated
     async def _process() -> str:
         await asyncio.sleep(0.05)
         logger.info("Searching similar images for: %s (model=%s)", payload.source_path, model_name)
-        return similarity_service.search(
+        return _similarity_for(model_name).search(
             source_path=payload.source_path,
             output_path=settings.output_path,
             embedding_fn=extractor,
