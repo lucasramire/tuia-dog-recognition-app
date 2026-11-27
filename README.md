@@ -110,28 +110,44 @@ El reinicio automático puede no funcionar en algunas versiones de Docker Deskto
 
 ## Opción 1 - Corriendo dentro de Docker
 
-Es la forma en que la cátedra evalúa el trabajo.
+Es la forma en que la cátedra evalúa el trabajo. Estos pasos se siguieron tal cual desde un clon limpio de la rama de entrega (ver [Validación end-to-end](#validación-end-to-end)).
 
-### 1. Construí y corré la aplicación
+### 1. Poné el dataset y los checkpoints
 
-Ajustá el archivo **.env.docker.example** a tus necesidades. Luego corré desde la terminal:
+Ni los datos ni los modelos están en el repositorio:
+
+- **Dataset**: `train/`, `valid/`, `test/` y `dogs.csv` dentro de `data/dataset/` (ver [Dataset](#dataset)). Los splits limpios (`data/splits/splits_v1.csv`) sí están en el repositorio.
+- **Checkpoints**: bajá [resnet18_finetuned.pth](https://drive.google.com/file/d/103Ze7L58gVNONt5wnHSaHGtY6HdyfTJ0/view?usp=sharing) y [cnn_custom.pth](https://drive.google.com/file/d/1-8W8WxsGniPAzOVRwB6vNj78IYNojocx/view?usp=sharing) a `models/`, con esos nombres exactos.
+- **Conjunto independiente** (opcional, para probar con fotos reales): [independent_v1.zip](https://drive.google.com/file/d/1u0fhkg3TcoSF4XrwcsO_28gwRSm_FFtG/view?usp=sharing), descomprimido dentro de `data/dataset/`.
+
+La configuración ya está lista: `docker-compose.yml` monta `.env.docker.example` como `.env` del backend (`EMBEDDING_MODEL=baseline`, umbrales calibrados), así que no hace falta copiarlo.
+
+### 2. Construí y corré la aplicación
 
 ```bash
 docker compose build
 docker compose up -d
 ```
 
-Servicios disponibles: frontend en `http://localhost:8080`, backend en `http://localhost:8000` y PostgreSQL en `localhost:5432`.
+Servicios disponibles: frontend en `http://localhost:8080`, backend en `http://localhost:8000` y PostgreSQL en `localhost:5432`. El primer `build` tarda (la imagen del backend pesa unos 10 GB porque `torch` incluye CUDA, aunque el contenedor corre en CPU). La primera consulta de cada etapa descarga los pesos preentrenados (ResNet50, YOLOv8n) a `models/`.
 
-### 2. Indexá la galería
+### 3. Indexá la galería
 
-Con la Etapa 1 implementada y el dataset en `data/dataset`, indexá el split de entrenamiento desde el contenedor del backend:
+Indexá el split de entrenamiento desde el contenedor del backend. La base del baseline es la que usa la app (`EMBEDDING_MODEL=baseline`); las de los modelos A y B son para el selector de modelo de la pestaña de la Etapa 1 (opcionales):
 
 ```bash
-docker compose exec backend python /scripts/build_index.py --split train
+docker compose exec backend python /scripts/build_index.py --split train --model baseline
+docker compose exec backend python /scripts/build_index.py --split train --model resnet18_finetuned
+docker compose exec backend python /scripts/build_index.py --split train --model cnn_custom
 ```
 
-Las imágenes salen de los splits limpios (`data/splits/splits_v1.csv`, incluido en el repositorio): se indexan las 7.198 de `train`, la misma galería evaluada en `2-train.ipynb`, sin las imágenes que quedaron en `valid`/`test` ni las descartadas en la limpieza. Con `--no-manifest` se recorre la carpeta `data/dataset/train/` completa, como en el repositorio original.
+En CPU tardan unos 18, 8 y 7 minutos. Las imágenes salen de los splits limpios (`data/splits/splits_v1.csv`): se indexan las 7.198 de `train`, la misma galería evaluada en `2-train.ipynb`, sin las imágenes que quedaron en `valid`/`test` ni las descartadas en la limpieza. Con `--no-manifest` se recorre la carpeta `data/dataset/train/` completa, como en el repositorio original. Cada modelo tiene su propia tabla, así que indexar uno no borra los otros; volver a indexar el mismo modelo agrega filas (el script avisa si la base ya tiene datos).
+
+> En Windows con Git Bash, la ruta `/scripts/...` se convierte en una ruta de Windows y el contenedor no la encuentra. Corré el comando desde PowerShell o anteponé `MSYS_NO_PATHCONV=1`.
+
+### 4. Verificá
+
+`http://localhost:8000/health` tiene que responder `"status": "ok"` y `"checkpoints": {"resnet18_finetuned": true, "cnn_custom": true}`. Después, el frontend en `http://localhost:8080`.
 
 ## Opción 2 - Configurando el ambiente local
 
@@ -409,8 +425,32 @@ Las dos se entregan ejecutadas y con las salidas en el repositorio.
 | 1280 | 0,05 | 0,65 / 0,37 | 0,56 | 1 de 7 |
 | **adaptativo** (320 a 640) | **0,85** | 0,90 / **0,88** | **0,67** | 1 de 7 |
 
-- La regla adaptativa queda en el mejor valor de cada dominio. La falsa alarma es un lobo blanco (0,81 de confianza): COCO no tiene la clase lobo y ningún umbral razonable lo filtra.
+- La regla adaptativa queda en el mejor valor de cada dominio. La falsa alarma es un lobo blanco (0,81 de confianza): COCO no tiene la clase lobo y ningún umbral razonable de YOLO lo filtra. En la app completa sí se filtra: el clasificador le da 0,15 a su mejor raza, queda bajo `CLASSIFIER_MIN_CONFIDENCE` y la respuesta es "unknown" (ninguna raza detectada).
 - Con 9 escenas de varios perros y 7 sin perros, la evidencia es débil.
+
+### Validación end-to-end
+
+Hecha el 2026-11-27 desde un clon limpio de la rama de entrega, siguiendo solo los pasos de [Opción 1 - Corriendo dentro de Docker](#opción-1---corriendo-dentro-de-docker): `docker compose build` y `up` sin errores, `/health` con los dos checkpoints, las tres bases indexadas (7.198 embeddings cada una, de 70 razas, con dimensión 2048, 512 y 256). Imágenes del conjunto independiente (ninguna está en la galería):
+
+| Pestaña | Imagen | Resultado |
+|---|---|---|
+| Etapa 1, baseline | Boston Terrier | Boston Terrier (0,89); 7 de los 10 vecinos son Boston Terrier y 3 Bulldog |
+| Etapa 1, Modelo A / Modelo B | la misma | Boston Terrier (0,87 / 0,91), sin reindexar: cada modelo busca en su tabla |
+| Etapa 1, baseline | gato | "unknown": el mejor vecino (0,71) queda bajo `SIMILARITY_THRESHOLD` |
+| Etapa 1, Modelo A | Beagle | "unknown" (0,78) aunque 6 de los 10 vecinos son Beagle: el umbral está calibrado para el baseline (con el baseline da Beagle, 0,86) |
+| Etapa 2, Modelo A / Modelo B | Labrador | Labrador (0,42) / "unknown" (0,29, bajo `CLASSIFIER_MIN_CONFIDENCE`) |
+| Etapa 3 | un Pug | 1 perro, Pug (detección 0,94, raza 0,99) |
+| Etapa 3 | dos perros | Corgi (0,81) y un Yorkie clasificado como Cockapoo (0,31) |
+| Etapa 3 | parque acuático con unos 12 perros y gente | 10 perros detectados; Boxer, Bulldog y Schnauzer, el resto "unknown" (recortes chicos o razas que no están entre las 70) |
+| Etapa 3 | interior sin animales | ninguna detección |
+| Etapa 3 | lobo blanco | 1 detección (0,81), raza "unknown" (0,15) |
+| Etapa 3 | otro Pug, foto de 360 x 480 | ninguna detección: con `imgsz` 480 YOLOv8n lo ve como elefante (con 320 detecta perro con 0,92). Es uno de los perros que YOLO pierde en fotos reales (detecta el 90 %) |
+
+Casos borde:
+
+- **Imagen que no se puede leer**: el frontend la rechaza antes de enviarla; enviada directo a la API, el job queda `failed` con `Could not read image` en `/status`, en las tres etapas.
+- **Checkpoint faltante**: `/health` lo marca en `false`; clasificar o detectar con ese modelo falla con `Checkpoint not found: models/resnet18_finetuned.pth...` en `/status`, y el otro modelo sigue funcionando.
+- **Sin perros**: la Etapa 3 no devuelve detecciones y la Etapa 1 responde "unknown".
 
 ## Problemas encontrados y soluciones
 
@@ -426,6 +466,8 @@ Las dos se entregan ejecutadas y con las salidas en el repositorio.
 - **Embeddings del modelo ajustado peores en fotos reales**: el Modelo A mejoraba la búsqueda en `test` pero la empeoraba mucho en el independiente (0,585 contra 0,797), así que la Etapa 1 se quedó con el baseline.
 - **Confianza del clasificador fuera de dominio**: el umbral calibrado en `valid` da 95 % de acierto en `test` pero 76 % en recortes de fotos reales, porque la red está sobreconfiada en su propio dominio (Guo et al., 2017). Se documentó en lugar de recalibrar con el conjunto de evaluación.
 - **Grad-CAM con el backbone congelado**: sin gradiente en el backbone, los hooks no reciben gradientes en la última capa convolucional. Se activa `requires_grad` en la entrada para que el gradiente llegue igual.
+- **El indexado incluía imágenes de consulta**: `build_index.py` recorría la carpeta `data/dataset/train/` original (7.946 imágenes), que tiene 850 más que `train` limpio: 359 son consultas de `valid`/`test` en los splits v1 y el resto se descartó en la limpieza. Una foto de `test` se habría encontrado a sí misma con score 1. Ahora indexa desde `data/splits/splits_v1.csv`, la misma galería que se evaluó.
+- **Cajas invisibles en fotos grandes**: el frontend dibujaba las detecciones con una línea fija de 2 px; en las fotos del conjunto independiente (4.000 a 6.700 px), al achicarlas para mostrarlas, las cajas desaparecían. El grosor y la letra ahora escalan con el tamaño de la imagen (`draw_detections_on_bgr` en `frontend/gradio_ui.py`).
 
 ## Notas importantes
 
