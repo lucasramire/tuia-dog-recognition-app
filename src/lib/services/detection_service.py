@@ -46,6 +46,7 @@ class DetectionService:
         dog_class_id: int,
         iou_threshold: float | None = None,
         min_confidence: float | None = None,
+        imgsz: int | None = None,
     ) -> None:
         self.classifier = classifier
         self.yolo_model_name = yolo_model
@@ -59,6 +60,10 @@ class DetectionService:
             min_confidence = settings.classifier_min_confidence if min_confidence is None else min_confidence
         self.iou_threshold = float(iou_threshold)
         self.min_confidence = float(min_confidence)
+        # Lado mayor al que YOLO redimensiona la imagen; None = valor por defecto de ultralytics (640).
+        if imgsz is not None and int(imgsz) <= 0:
+            raise ValueError(f"imgsz debe ser positivo, llego {imgsz}")
+        self.imgsz = None if imgsz is None else int(imgsz)
         self._yolo: Any = None
         self._yolo_lock = threading.Lock()
 
@@ -116,12 +121,14 @@ class DetectionService:
         height, width = image.shape[:2]
 
         # ultralytics interpreta los np.ndarray como BGR, igual que OpenCV.
+        extra = {} if self.imgsz is None else {"imgsz": self.imgsz}
         results = self._get_yolo().predict(
             image,
             conf=self.conf_threshold,
             iou=self.iou_threshold,
             classes=[self.dog_class_id],
             verbose=False,
+            **extra,
         )
         detections: list[tuple[tuple[int, int, int, int], float]] = []
         for result in results:

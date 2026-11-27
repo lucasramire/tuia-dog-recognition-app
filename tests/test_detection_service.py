@@ -87,6 +87,18 @@ def test_detect_dogs_ints_clipped_sorted_and_filtered(tmp_path: Path) -> None:
     assert fake.calls[0]["classes"] == [16]
 
 
+def test_detect_dogs_imgsz(tmp_path: Path) -> None:
+    service = _service(tmp_path)
+    service._yolo = _FakeYolo(xyxy=[], conf=[], cls=[])
+    service.detect_dogs(_image())
+    assert "imgsz" not in service._yolo.calls[0]  # sin imgsz: el valor por defecto de ultralytics
+    service.imgsz = 320
+    service.detect_dogs(_image())
+    assert service._yolo.calls[1]["imgsz"] == 320
+    with pytest.raises(ValueError):
+        DetectionService(service.classifier, "x.pt", 0.25, 16, 0.5, 0.0, imgsz=0)
+
+
 def test_detect_dogs_empty(tmp_path: Path) -> None:
     service = _service(tmp_path)
     service._yolo = _FakeYolo(xyxy=[], conf=[], cls=[])
