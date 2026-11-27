@@ -287,8 +287,8 @@ imagen ──► Etapa 3: YOLOv8n (perros, imgsz adaptativo) ──► recorte �
 
 - **Preprocesamiento único** (`src/lib/vision/preprocessing.py`): BGR a RGB, resize que conserva la relación de aspecto, normalización de ImageNet y padding hasta 224 x 224. Lo usan las notebooks, el entrenamiento y los tres servicios, así lo que se mide es lo que hace la app.
 - **Etapa 1** (`similarity_service.py`): `extract_embedding` usa ResNet50 `IMAGENET1K_V1` sin la capa `fc` (2048 dimensiones, normalizado en L2), cargada una sola vez. `search_similar_images` resuelve el top-K en PostgreSQL con el operador `<=>` (o recorre el JSON). `predict_breed_from_neighbors` vota la raza ponderando por similitud y devuelve `"unknown"` si el mejor vecino queda bajo `SIMILARITY_THRESHOLD`.
-- **Etapa 2** (`classifier_service.py`): PENDIENTE (Valentín): modelos A y B, entrenamiento y evaluación.
-- **Etapa 3** (`detection_service.py`): PENDIENTE (Valentín): YOLOv8n con `imgsz` adaptativo y clasificación de cada recorte.
+- **Etapa 2** (`classifier_service.py`): carga el checkpoint del modelo elegido (A `resnet18_finetuned` o B `cnn_custom`), aplica el preprocesamiento compartido y toma la raza de mayor probabilidad del softmax; si esa probabilidad queda bajo `CLASSIFIER_MIN_CONFIDENCE` responde `"unknown"`. `train_classifier` entrena con la receta común (`lib/training/trainer.py`) y `evaluate_classifier` calcula las métricas sobre un split. `extract_custom_embedding` expone la penúltima capa para usar el modelo en la Etapa 1.
+- **Etapa 3** (`detection_service.py`): YOLOv8n preentrenado en COCO, filtrado a la clase perro (16), con confianza mínima 0,25 e IoU de NMS 0,7. El tamaño de entrada (`imgsz`) se adapta a cada imagen: el lado mayor redondeado a múltiplo de 32 y acotado entre 320 y 640. Cada caja se recorta y se clasifica con el modelo de la Etapa 2, con el mismo umbral de `"unknown"`.
 - **Una base por modelo de embeddings** (mejora opcional): ver [Notas importantes](#notas-importantes).
 
 Código propio en `src/lib/`: `dataset/` (manifiestos, filtrado, splits, augmentation, conjunto independiente), `evaluation/` (métricas de búsqueda y clasificación), `models/`, `training/`, `search/` (regla de voto compartida por la app y las notebooks) y `visualization/`. Tests en `tests/` (`pytest`).
@@ -334,8 +334,20 @@ Las dos se entregan ejecutadas y con las salidas en el repositorio.
 
 - **Baseline de embeddings (Etapa 1)**: ResNet50 preentrenada en ImageNet (`IMAGENET1K_V1`), salida del global average pooling (2048). ImageNet ya incluye unas 118 razas de perro entre sus clases, así que es una línea de base fuerte sin entrenar.
 - **Umbral de similitud**: `SIMILARITY_THRESHOLD=0.8029` (`cosine`). Calibrado con el criterio de la clase 4 (barrido, curva ROC y FAR objetivo del 5 %) usando `valid` como consultas conocidas y 92 imágenes sin perro de Wikimedia Commons como desconocidas (`data/splits/calibration_negatives_v1.csv`). Se calibra contra "lo que no es un perro" y no contra razas nuevas, porque una raza que el modelo no vio sigue siendo un perro (con razas apartadas el umbral rechazaba el 45 % de `test`). Lobos y zorros no participan del cálculo: el dataset trata cánidos salvajes como razas (Dingo, Coyote, Dhole, African Wild Dog).
-- **Modelo A, Modelo B, hiperparámetros, YOLO y `CLASSIFIER_MIN_CONFIDENCE`**: PENDIENTE (Valentín).
-- **Checkpoints**: PENDIENTE: links públicos de `resnet18_finetuned.pth` y `cnn_custom.pth`, a colocar en `models/`.
+- **Receta común de entrenamiento** (`lib/training/trainer.py`): AdamW, scheduler coseno, label smoothing 0,1, weight decay 1e-4, batch 64, precisión mixta en GPU, early stopping con paciencia 5 sobre la accuracy de `valid` y semilla 42. Se guarda la mejor época según `valid`. Las variantes se eligen con `valid` y `test` se mide una sola vez, con el modelo final.
+- **Modelo A** (`resnet18_finetuned`, 11,2 M parámetros): ResNet18 `IMAGENET1K_V1` con la `fc` reemplazada por una capa lineal de 512 a 70. Embedding de 512 (salida del global average pooling). Se compararon tres variantes en `valid`:
+
+  | Variante | Qué se entrena | Accuracy en `valid` |
+  |---|---|---|
+  | A1 feature extraction | solo la cabeza (LR 1e-3), backbone y BatchNorm congelados | 0,929 |
+  | A2 fine-tuning | todo: cabeza 1e-3, backbone 1e-4 | 0,939 |
+  | A3 fine-tuning + pesos de clase | igual que A2, con pesos inversos a la frecuencia en la loss | **0,943** |
+
+  Las diferencias están dentro del ruido (un punto de error estándar con 700 imágenes); se eligió A3 por ser la mejor y no costar más. El modelo final es A3 reentrenado (hasta 30 épocas, mejor época 7).
+- **Modelo B** (`cnn_custom`, 1,06 M parámetros, desde cero): 5 bloques conv 3x3 + BatchNorm + ReLU + max-pool con 32, 64, 128, 256 y 256 canales, global average pooling, embedding de 256 con ReLU, dropout 0,3 y clasificador de 70. Inicialización de Kaiming, LR 1e-3. Variantes a 30 épocas en `valid`: base 0,557, estadísticas de `train` 0,553, sin BatchNorm 0,544, dropout 0,5 0,477, augmentation fuerte 0,457. Ninguna había convergido y ninguna sobreajustaba, así que más regularización empeoraba. El modelo final es la base con un tope de 60 épocas: 0,716 en `valid` (mejor época 54).
+- **YOLO**: YOLOv8n con `imgsz` adaptativo (320 a 640), confianza 0,25 e IoU 0,7. Se comparó con `imgsz` fijo de 320, 640 y 1280 y con YOLO11n (ver [Resultados](#resultados)). YOLO11n detecta algo más en las fotos reales (0,95 contra 0,90, 6 de 118 imágenes) y algo menos en `test`, con latencia parecida; se mantuvo v8n, el modelo por defecto del enunciado, porque la diferencia es chica. `YOLO_CONF_THRESHOLD` se probó con 0,15, 0,25 y 0,40: cambian 1 o 2 imágenes por grupo, así que se mantuvo 0,25.
+- **`CLASSIFIER_MIN_CONFIDENCE=0.30`**: calibrado con la curva riesgo-cobertura del Modelo A en `valid`, como el menor umbral cuya accuracy sobre lo aceptado llega a 0,95. En `test` responde el 96,1 % de las imágenes con 94,8 % de acierto y rechaza el 34 % de los errores. Para el Modelo B el mismo criterio da 0,654 y solo respondería el 31 %: el valor de la app está pensado para el A.
+- **Checkpoints** (colocarlos en `models/`): [resnet18_finetuned.pth](PENDIENTE_LINK_A) (43 MB) y [cnn_custom.pth](PENDIENTE_LINK_B) (4 MB). Links públicos de solo lectura.
 
 ## Resultados
 
@@ -349,9 +361,54 @@ Las dos se entregan ejecutadas y con las salidas en el repositorio.
 - `cosine` y `l2` dan los mismos vecinos con embeddings normalizados (cambia solo la escala del score); con vectores crudos `l2` empeora.
 - `TOP_K=10` es el mejor valor en `test` y está dentro del ruido del mejor en el independiente.
 - Con el umbral elegido, `test` no tiene rechazos; en el independiente se rechazan 4 de 118 fotos reales y 5 de las 7 imágenes sin perro (se aceptan el zorro y el lobo).
-- NDCG@10 con los embeddings de los modelos A y B: PENDIENTE (Valentín).
 
-**Etapa 2 y comparación**: PENDIENTE (Valentín): métricas de ambos modelos sobre `test` y el independiente, matriz de confusión, comparación y análisis de errores.
+**Embeddings de los modelos entrenados en la Etapa 1** (mismo protocolo; silueta coseno de los embeddings de `test`):
+
+| Embeddings | Dimensión | NDCG@10 `test` | accuracy `test` | Silueta | NDCG@10 independiente | accuracy independiente |
+|---|---|---|---|---|---|---|
+| baseline (ResNet50) | 2048 | 0,902 | 0,943 | 0,297 | **0,716** | **0,797** [0,720; 0,864] |
+| Modelo A (ResNet18) | 512 | **0,919** | 0,940 | 0,303 | 0,585 | 0,585 [0,500; 0,669] |
+| Modelo B (CNN propia) | 256 | 0,596 | 0,704 | 0,060 | 0,187 | 0,246 |
+
+- En `test` el Modelo A ordena un poco mejor a los vecinos (NDCG +0,017, IC 95 % [0,004; 0,030]), pero la raza votada acierta lo mismo (McNemar 19 contra 21, p = 0,87).
+- En fotos reales es al revés y por mucho: el baseline acierta 30 consultas que el A falla y el A solo 5 que el baseline falla (p = 2e-5). El fine-tuning especializó el espacio en el estilo del dataset y pierde fuera de él.
+- **Por eso `EMBEDDING_MODEL=baseline`**, que además es el modelo con el que está calibrado `SIMILARITY_THRESHOLD`.
+
+**Etapa 2** (`test`, 700 imágenes, 10 por raza; IC bootstrap del 95 %):
+
+| Modelo | accuracy | IC 95 % | precision | recall | F1 | Parámetros | ms CPU por imagen |
+|---|---|---|---|---|---|---|---|
+| A (ResNet18 finetune + pesos de clase) | **0,924** | [0,904; 0,943] | 0,933 | 0,924 | **0,923** | 11,2 M | 39,8 (23,7 en ONNX) |
+| B (CNN propia) | 0,703 | [0,670; 0,739] | 0,721 | 0,703 | 0,698 | 1,06 M | 26,6 (12,1 en ONNX) |
+
+- La diferencia es clara: 175 imágenes que solo acierta A contra 20 que solo acierta B (McNemar, p = 4e-32). **La app clasifica con el Modelo A.**
+- El B tiene 10 veces menos parámetros pero es solo 1,5 veces más rápido: aplica sus primeras convoluciones a 224 px y hace unas 0,85 GMAC por imagen, contra 1,8 de la ResNet18. Las latencias son de un Intel de 4 hilos.
+- Errores del A: casi todos entre razas parecidas, los mismos pares que el EDA encontró con el baseline (Boston Terrier y Bulldog, Cockapoo y Labradoodle, Lhasa y Shih-Tzu, Pastor Alemán y Malinois). La raza con peor F1 es Bulldog (0,40), y parte de esos errores parecen de etiqueta (Boston Terriers dentro de la carpeta Bulldog). 18 de los 53 errores tienen probabilidad de 0,5 o más: ningún umbral razonable los filtra.
+- Errores del B: más repartidos, con confusiones entre razas que no se parecen (Cairn y Yorkie, Basenji y Corgi). Peores razas: Cocker, Chihuahua, Greyhound y Basenji, que el A resuelve con F1 de 0,86 o más.
+- Grad-CAM: los dos modelos miran al perro, no al fondo. El A se concentra en la cabeza; el B es más difuso.
+
+**Conjunto independiente** (118 fotos reales de un perro). Si YOLO no encuentra el perro cuenta como error:
+
+| Modelo | Imagen completa | Recorte de YOLO (como la Etapa 3) | F1 con recorte |
+|---|---|---|---|
+| A | 0,593 | **0,644** [0,559; 0,729] | 0,688 |
+| B | 0,195 | 0,356 [0,263; 0,441] | 0,428 |
+
+- **El cambio de dominio es grande**: el A pasa de 92 % en `test` a 64 % en fotos reales. Recortar con YOLO le suma 5 puntos al A (no significativo, McNemar 20 contra 14, p = 0,39) y 16 al B (22 contra 3, p < 0,001). Lo que queda es el dominio en sí: iluminación, resolución, pose y estilo de las fotos.
+- Las peores razas son los pares que se confunden, incluidos a propósito: Shih-Tzu (1 de 6), Cockapoo (1 de 5), Labradoodle (2 de 5), Boston Terrier y Bulldog (3 de 6).
+- `CLASSIFIER_MIN_CONFIDENCE=0.30` no se transfiere del todo: en los recortes reales la confianza mediana es 0,62, el umbral deja responder el 73 % y lo aceptado acierta el 76 % (72 % sin umbral). No se recalibró con este conjunto para no elegir el umbral sobre los mismos datos en que se informa.
+
+**Etapa 3** (YOLOv8n, confianza 0,25; conteo de perros, porque no hay cajas anotadas):
+
+| `imgsz` | `test` 224 px: detecta | Fotos de un perro: detecta / conteo exacto | Varios perros: conteo exacto | Sin perro: falsas alarmas |
+|---|---|---|---|---|
+| 320 | **0,85** | 0,85 / 0,83 | 0,44 | 0 de 7 |
+| 640 | 0,58 | **0,91** / **0,88** | **0,67** | 1 de 7 |
+| 1280 | 0,05 | 0,65 / 0,37 | 0,56 | 1 de 7 |
+| **adaptativo** (320 a 640) | **0,85** | 0,90 / **0,88** | **0,67** | 1 de 7 |
+
+- La regla adaptativa queda en el mejor valor de cada dominio. La falsa alarma es un lobo blanco (0,81 de confianza): COCO no tiene la clase lobo y ningún umbral razonable lo filtra.
+- Con 9 escenas de varios perros y 7 sin perros, la evidencia es débil.
 
 ## Problemas encontrados y soluciones
 
@@ -360,7 +417,13 @@ Las dos se entregan ejecutadas y con las salidas en el repositorio.
 - **Semillas de Albumentations**: `A.Compose(seed=...)` le da la misma semilla a todas las transformaciones, que quedan acopladas (dos flips de p = 0,5 nunca se aplicaban por separado). Se siembra cada transformación por separado; además se re-siembra en cada worker del `DataLoader`, que si no repetía las mismas augmentations.
 - **Umbral de "unknown"**: calibrado contra razas nuevas rechazaba casi la mitad de los perros reales; se recalibró contra imágenes sin perro y sin cánidos salvajes (ver [Modelos y entrenamiento](#modelos-y-entrenamiento)).
 - **Conjunto independiente**: el dataset de Kaggle incluye fotos de Wikimedia Commons, así que se controló cada imagen contra el dataset (pHash, embeddings y revisión manual desde coseno 0,94); se encontraron y borraron 6 copias. Wikimedia limita las descargas de clientes sin contacto (error 429): el script espera y retoma por grupo.
-- PENDIENTE (Valentín): problemas de entrenamiento y detección (por ejemplo, el `imgsz` de YOLO con imágenes de 224 px).
+- **`imgsz` de YOLO con imágenes de 224 px**: con el valor por defecto (640) YOLO agranda la imagen casi tres veces y pierde el perro en 4 de cada 10 imágenes de `test`; con 320 pierde los perros chicos de las fotos grandes. Se resolvió con un `imgsz` adaptativo al tamaño de la imagen, entre 320 y 640 (`adaptive_imgsz` en `detection_service.py`).
+- **El Modelo B no llegaba a aprender en 30 épocas**: todas las variantes tenían la mejor época al final y ninguna sobreajustaba, así que más dropout o más augmentation empeoraban. Se reentrenó con un tope de 60 épocas (de 0,557 a 0,716 en `valid`).
+- **Sobreajuste del Modelo A**: en el fine-tuning la accuracy de `train` llega a 0,98 mientras `valid` queda en 0,94. El early stopping corta en las épocas 12 a 14 y se guarda la mejor época según `valid`, no la última.
+- **Entrenamiento en Colab con cortes de sesión**: cada variante guarda su checkpoint, su historial y un archivo `.done.json` en Drive; al volver a correr la notebook se reutilizan y no se reentrena.
+- **Embeddings del modelo ajustado peores en fotos reales**: el Modelo A mejoraba la búsqueda en `test` pero la empeoraba mucho en el independiente (0,585 contra 0,797), así que la Etapa 1 se quedó con el baseline.
+- **Confianza del clasificador fuera de dominio**: el umbral calibrado en `valid` da 95 % de acierto en `test` pero 76 % en recortes de fotos reales, porque la red está sobreconfiada en su propio dominio (Guo et al., 2017). Se documentó en lugar de recalibrar con el conjunto de evaluación.
+- **Grad-CAM con el backbone congelado**: sin gradiente en el backbone, los hooks no reciben gradientes en la última capa convolucional. Se activa `requires_grad` en la entrada para que el gradiente llegue igual.
 
 ## Notas importantes
 
