@@ -131,6 +131,8 @@ Con la Etapa 1 implementada y el dataset en `data/dataset`, indexá el split de 
 docker compose exec backend python /scripts/build_index.py --split train
 ```
 
+Las imágenes salen de los splits limpios (`data/splits/splits_v1.csv`, incluido en el repositorio): se indexan las 7.198 de `train`, la misma galería evaluada en `2-train.ipynb`, sin las imágenes que quedaron en `valid`/`test` ni las descartadas en la limpieza. Con `--no-manifest` se recorre la carpeta `data/dataset/train/` completa, como en el repositorio original.
+
 ## Opción 2 - Configurando el ambiente local
 
 ### 1. Cloná tu fork
@@ -299,7 +301,7 @@ Scripts agregados:
 |---|---|
 | `scripts/build_splits.py` | Regenera los splits limpios (`data/splits/splits_v1.csv`) con el mismo código que la notebook 1 |
 | `scripts/collect_independent.py` | Junta candidatas de Wikimedia Commons con licencia libre para el conjunto independiente y para las imágenes sin perro que calibran el umbral, y las registra con autor y licencia |
-| `scripts/build_index.py --model <modelo>` | Indexa la base del modelo indicado (agregado `--model`) |
+| `scripts/build_index.py --model <modelo>` | Indexa la base del modelo indicado (agregado `--model`). Toma las imágenes de `data/splits/splits_v1.csv` (agregado `--manifest`), para no indexar consultas de `valid`/`test` |
 
 ## Notebooks
 

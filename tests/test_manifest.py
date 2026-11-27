@@ -12,6 +12,7 @@ from lib.dataset.manifest import (
     load_manifest,
     normalize_breed,
     save_manifest,
+    split_images,
     validate_manifest,
 )
 
@@ -94,3 +95,49 @@ def test_invalid_manifests_raise(tmp_path: Path) -> None:
 def test_missing_dogs_csv_raises(tmp_path: Path) -> None:
     with pytest.raises(ValueError):
         build_manifest_from_dogs_csv(tmp_path / "no_existe.csv")
+
+
+def _manifest(rows: list[tuple[str, str, str]]) -> pd.DataFrame:
+    return pd.DataFrame(rows, columns=MANIFEST_COLUMNS)
+
+
+def test_split_images_only_requested_split_sorted(tmp_path: Path) -> None:
+    manifest = _manifest(
+        [
+            ("train/Beagle/002.jpg", "Beagle", "train"),
+            ("test/Afghan/1.jpg", "Afghan", "test"),
+            ("train/Afghan/001.jpg", "Afghan", "train"),
+            ("valid/Afghan/01.jpg", "Afghan", "valid"),
+            ("train/Beagle/001.jpg", "Beagle", "train"),
+        ]
+    )
+    items = split_images(manifest, tmp_path, "train")
+    assert items == [
+        (tmp_path / "train/Afghan/001.jpg", "Afghan"),
+        (tmp_path / "train/Beagle/001.jpg", "Beagle"),
+        (tmp_path / "train/Beagle/002.jpg", "Beagle"),
+    ]
+
+
+def test_split_images_excludes_images_moved_to_test(tmp_path: Path) -> None:
+    # En los splits v1 una imagen de la carpeta train/ puede ser de test: no se indexa.
+    manifest = _manifest(
+        [
+            ("train/Afghan/001.jpg", "Afghan", "train"),
+            ("train/Afghan/002.jpg", "Afghan", "test"),
+        ]
+    )
+    assert split_images(manifest, tmp_path, "train") == [(tmp_path / "train/Afghan/001.jpg", "Afghan")]
+
+
+def test_split_images_limit_per_breed(tmp_path: Path) -> None:
+    rows = [(f"train/{b}/{i:03d}.jpg", b, "train") for b in ("Afghan", "Beagle") for i in range(5)]
+    items = split_images(_manifest(rows), tmp_path, "train", limit=2)
+    assert [(p.name, b) for p, b in items] == [
+        ("000.jpg", "Afghan"), ("001.jpg", "Afghan"), ("000.jpg", "Beagle"), ("001.jpg", "Beagle"),
+    ]
+
+
+def test_split_images_invalid_split(tmp_path: Path) -> None:
+    with pytest.raises(ValueError, match="Split invalido"):
+        split_images(_manifest(ROWS), tmp_path, "gallery")

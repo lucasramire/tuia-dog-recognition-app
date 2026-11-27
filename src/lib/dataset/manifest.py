@@ -103,6 +103,23 @@ def load_manifest(
     return manifest
 
 
+def split_images(
+    manifest: pd.DataFrame, dataset_path: Path, split: str, limit: int = 0
+) -> list[tuple[Path, str]]:
+    """(ruta absoluta, raza) de las imagenes de un split, ordenadas por raza y ruta.
+
+    Es lo que indexa scripts/build_index.py: con los splits limpios la galeria queda igual a la
+    medida en 2-train.ipynb (sin las imagenes de valid/test ni las descartadas en la limpieza).
+    `limit` > 0 toma como maximo esa cantidad por raza (indexado de prueba).
+    """
+    if split not in SPLITS:
+        raise ValueError(f"Split invalido '{split}'; validos: {list(SPLITS)}")
+    rows = manifest.loc[manifest["split"] == split].sort_values(["breed", "path"])
+    if limit > 0:
+        rows = rows.groupby("breed", sort=True).head(limit)
+    return [(dataset_path / path, breed) for path, breed in zip(rows["path"], rows["breed"])]
+
+
 def class_names(manifest: pd.DataFrame) -> list[str]:
     """Lista ordenada de razas de train: el indice de cada raza es su posicion.
 
