@@ -34,12 +34,23 @@ class Settings(BaseSettings):
     similarity_threshold: float = os.getenv("SIMILARITY_THRESHOLD", 0.55)
     top_k: int = os.getenv("TOP_K", 10)
     image_size: int = os.getenv("IMAGE_SIZE", 224)
-    embedding_dim: int = os.getenv("EMBEDDING_DIM", 512)
+    # Dimension del embedding del modelo elegido en EMBEDDING_MODEL (ver expected_embedding_dim)
+    embedding_dim: int = os.getenv("EMBEDDING_DIM", 2048)
+    # Dimension de cada modelo: una columna vector(dim) de pgvector tiene dimension fija
+    baseline_embedding_dim: int = os.getenv("BASELINE_EMBEDDING_DIM", 2048)
+    resnet18_embedding_dim: int = os.getenv("RESNET18_EMBEDDING_DIM", 512)
+    cnn_custom_embedding_dim: int = os.getenv("CNN_CUSTOM_EMBEDDING_DIM", 256)
 
     # Configuracion de YOLO (Etapa 3)
     yolo_model: str = os.getenv("YOLO_MODEL", "yolov8n.pt")
     yolo_conf_threshold: float = os.getenv("YOLO_CONF_THRESHOLD", 0.25)
+    # IoU de la supresion de no maximos (NMS) de YOLO; 0.7 es el valor por defecto de ultralytics
+    yolo_iou_threshold: float = os.getenv("YOLO_IOU_THRESHOLD", 0.7)
     yolo_dog_class_id: int = os.getenv("YOLO_DOG_CLASS_ID", 16)
+
+    # Probabilidad minima para aceptar la raza de un recorte; por debajo devuelve "unknown".
+    # 0 desactiva el rechazo. Se calibra sobre valid en 2-train.ipynb.
+    classifier_min_confidence: float = os.getenv("CLASSIFIER_MIN_CONFIDENCE", 0.0)
 
     # Paths
     embeddings_path: Path = Path(os.getenv("EMBEDDINGS_PATH", "data/embeddings.json"))
@@ -55,6 +66,31 @@ class Settings(BaseSettings):
     postgres_db: str = os.getenv("POSTGRES_DB", "dogs")
     postgres_user: str = os.getenv("POSTGRES_USER", "dogs_user")
     postgres_password: str = os.getenv("POSTGRES_PASSWORD", "dogs_pass")
+
+    def embedding_dim_for(self, model: str) -> int:
+        """Dimension del embedding de un modelo (cada uno tiene su tabla vector(dim) en pgvector)."""
+        dims = {
+            "baseline": self.baseline_embedding_dim,
+            "resnet18_finetuned": self.resnet18_embedding_dim,
+            "cnn_custom": self.cnn_custom_embedding_dim,
+        }
+        if model not in dims:
+            raise ValueError(f"Modelo de embeddings desconocido: '{model}'. Valores validos: {sorted(dims)}")
+        return int(dims[model])
+
+    @property
+    def expected_embedding_dim(self) -> int:
+        """Dimension esperada para el modelo elegido en EMBEDDING_MODEL."""
+        return self.embedding_dim_for(self.embedding_model)
+
+    def check_embedding_dim(self) -> None:
+        """Falla con un mensaje claro si EMBEDDING_DIM no coincide con el modelo elegido."""
+        expected = self.expected_embedding_dim
+        if int(self.embedding_dim) != int(expected):
+            raise ValueError(
+                f"EMBEDDING_DIM={self.embedding_dim} no coincide con la dimension de "
+                f"'{self.embedding_model}' ({expected}). Corregi EMBEDDING_DIM en el .env."
+            )
 
 
 @lru_cache(maxsize=1)

@@ -1,0 +1,72 @@
+{
+  "original": {
+    "train": 7946,
+    "test": 700,
+    "valid": 700
+  },
+  "final": {
+    "train": 7198,
+    "test": 700,
+    "valid": 700
+  },
+  "dropped_by_reason_and_split": {
+    "borrosa": {
+      "test": 0,
+      "train": 5,
+      "valid": 0
+    },
+    "duplicado dentro del split": {
+      "test": 6,
+      "train": 447,
+      "valid": 6
+    },
+    "etiqueta contradictoria": {
+      "test": 2,
+      "train": 39,
+      "valid": 0
+    },
+    "fuga entre splits": {
+      "test": 128,
+      "train": 0,
+      "valid": 115
+    }
+  },
+  "moved_from_train": {
+    "test": 191,
+    "valid": 168
+  },
+  "moved_to_train_near_copies": {
+    "test": 55,
+    "valid": 47
+  },
+  "confirmed_duplicate_pairs": 866,
+  "cross_split_pairs_above_isolation_cosine": 0,
+  "calibration_breeds": [
+    "Basenji",
+    "Basset",
+    "Corgi",
+    "Irish Spaniel",
+    "Malinois",
+    "Rhodesian",
+    "Siberian Husky"
+  ],
+  "config": {
+    "quality": {
+      "min_side": 64,
+      "min_blur_var": 30.0,
+      "min_brightness": 15.0,
+      "max_brightness": 250.0
+    },
+    "duplicates": {
+      "max_phash_distance": 8,
+      "min_cosine_with_phash": 0.9,
+      "min_cosine_alone": 0.97
+    },
+    "candidate_max_phash": 12,
+    "candidate_min_cosine": 0.93,
+    "per_class": 10,
+    "isolation_cosine": 0.95,
+    "n_calibration_breeds": 7,
+    "seed": 42
+  }
+}

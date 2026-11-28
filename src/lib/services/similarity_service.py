@@ -1,7 +1,9 @@
 from __future__ import annotations
 
+import heapq
 import json
 import logging
+import threading
 from pathlib import Path
 from typing import Callable, Optional
 from uuid import uuid4
@@ -9,7 +11,9 @@ from uuid import uuid4
 import cv2
 import numpy as np
 
+from lib.models.baseline import BaselineEmbedder
 from lib.schemas import EmbeddingRecord, Neighbor, SearchResult
+from lib.search.voting import predict_breed
 from lib.storage.base import EmbeddingStoreProtocol
 
 logger = logging.getLogger(__name__)
@@ -72,7 +76,26 @@ class SimilarityService:
           - Recordar que la imagen llega en BGR (OpenCV).
         Retorna una lista de floats de dimension EMBEDDING_DIM.
         """
-        raise NotImplementedError("Etapa 1: implementar extract_embedding")
+        # ResNet50 IMAGENET1K_V1 sin fc (2048), preprocesamiento compartido y norma L2:
+        # ver lib/models/baseline.py. El modelo se carga una sola vez por servicio.
+        return self._get_baseline_embedder().embed(image)
+
+    _embedder_lock = threading.Lock()
+
+    def _get_baseline_embedder(self) -> BaselineEmbedder:
+        """Carga perezosa del baseline: el primer pedido lo crea, los siguientes lo reusan.
+
+        El lock evita cargarlo dos veces si llegan dos pedidos a la vez antes de
+        que termine la primera carga.
+        """
+        embedder = getattr(self, "_baseline_embedder", None)
+        if embedder is None:
+            with self._embedder_lock:
+                embedder = getattr(self, "_baseline_embedder", None)
+                if embedder is None:
+                    embedder = BaselineEmbedder(self.image_size)
+                    self._baseline_embedder = embedder
+        return embedder
 
     def search_similar_images(self, embedding: list[float], top_k: int) -> list[Neighbor]:
         """
@@ -85,7 +108,33 @@ class SimilarityService:
         Retorna una lista de Neighbor (path, breed, score) ordenada por score
         descendente.
         """
-        raise NotImplementedError("Etapa 1: implementar search_similar_images")
+        if not embedding:
+            raise ValueError("search_similar_images recibio un embedding vacio")
+        k = int(top_k)
+        if k <= 0:
+            return []
+
+        # Con pgvector la base resuelve el top-k (operador <=>, distancia coseno, class_4 6.12)
+        # sin traer todos los vectores a Python. Con l2 el orden de la base sigue siendo el del
+        # coseno: con embeddings de norma 1 ambos ordenan igual (||a-b||^2 = 2 - 2 cos).
+        # Sin pgvector (USE_PGVECTOR=false) se recorre toda la base JSON.
+        search = getattr(self.store, "search", None)
+        records = search(embedding, k) if callable(search) else self.store.all()
+
+        scored = []
+        for record in records:
+            if len(record.embedding) != len(embedding):
+                raise ValueError(
+                    f"El embedding de la consulta tiene {len(embedding)} dimensiones y el de "
+                    f"{record.path} tiene {len(record.embedding)}: la base se indexo con otro "
+                    "modelo. Reindexar o revisar EMBEDDING_MODEL / EMBEDDING_DIM."
+                )
+            scored.append((self.similarity(embedding, record.embedding), record))
+
+        # El score siempre sale de self.similarity (respeta SIMILARITY_METRIC) y se reordena
+        # aca, asi el resultado es el mismo con pgvector y con JSON.
+        best = heapq.nlargest(k, scored, key=lambda item: item[0])
+        return [Neighbor(path=r.path, breed=r.breed, score=float(s)) for s, r in best]
 
     def predict_breed_from_neighbors(self, results: list[Neighbor]) -> tuple[str, float]:
         """
@@ -95,7 +144,13 @@ class SimilarityService:
         Si el mejor score esta por debajo de self.similarity_threshold se
         considera "unknown". Retorna (raza, score).
         """
-        raise NotImplementedError("Etapa 1: implementar predict_breed_from_neighbors")
+        # Rechazo si el mejor vecino queda bajo el umbral (criterio de identify_face, class_4);
+        # si no, voto ponderado por similitud y score = similitud media de la raza ganadora.
+        # La regla vive en lib/search/voting.py para que la notebook mida lo mismo que la app.
+        breed, score = predict_breed(
+            [n.breed for n in results], [n.score for n in results], self.similarity_threshold
+        )
+        return breed, float(score)
 
     # ------------------------------------------------------------------
     # Helpers de similitud provistos

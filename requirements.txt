@@ -25,10 +25,11 @@ httptools==0.7.1
 httpx==0.28.1
 huggingface-hub==1.11.0
 idna==3.11
+imagehash==4.3.2
 imageio==2.37.3
 jinja2==3.1.6
 joblib==1.5.3
-kagglehub>=0.3
+kagglehub==1.0.2
 kiwisolver==1.5.0
 lazy-loader==0.5
 markdown-it-py==4.0.0
@@ -56,10 +57,12 @@ pydantic-settings==2.13.1
 pydub==0.25.1
 pygments==2.20.0
 pyparsing==3.3.2
+pytest==8.4.2
 python-dateutil==2.9.0.post0
 python-dotenv==1.2.2
 python-multipart==0.0.26
 pytz==2026.1.post1
+pywavelets==1.10.0
 pyyaml==6.0.3
 requests==2.33.1
 rich==15.0.0
@@ -85,7 +88,7 @@ tqdm==4.67.3
 typer==0.24.1
 typing-extensions==4.15.0
 typing-inspection==0.4.2
-ultralytics>=8.3
+ultralytics==8.4.216
 urllib3==2.6.3
 uvicorn==0.44.0
 uvloop==0.22.1; sys_platform != 'win32'
